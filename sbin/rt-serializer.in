@@ -96,6 +96,7 @@ GetOptions(
     "directory|d=s",
     "force|f!",
     "size|s=i",
+    "format=s",
 
     "users!",
     "groups!",
@@ -157,7 +158,11 @@ if (-t STDOUT and not $OPT{verbose} and not $OPT{quiet}) {
 $args{Verbose} = 0 if $OPT{quiet};
 
 
-$walker = RT::Migrate::Serializer::File->new( %args );
+my $walker_class = "RT::Migrate::Serializer::" . ($OPT{format} || 'File');
+$walker_class->require
+    or die "Failed to load $walker_class for format $OPT{format}: $@";
+
+$walker = $walker_class->new( %args );
 
 my $log = RT::Migrate::setup_logging( $walker->{Directory} => 'serializer.log' );
 print "Logging warnings and errors to $log\n" if $log;
@@ -289,6 +294,12 @@ around 32Mb in size; this option is used to set a different threshold
 size, in megabytes.  Note that this is the threshold after which it
 rotates to writing a new file, and is as such the I<lower bound> on the
 size of each output file.
+
+=item B<--format> I<format>
+
+By default, C<rt-serializer> writes Storable-encoded files
+(C<--format File>). You can choose to export an F<initialdata.json>
+instead by passing C<--format JSON>.
 
 =item B<--no-users>
 
