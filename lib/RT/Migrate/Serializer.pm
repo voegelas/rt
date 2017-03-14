@@ -68,6 +68,7 @@ sub Init {
 
         FollowScrips        => 0,
         FollowTickets       => 1,
+        FollowTransactions  => 1,
         FollowACL           => 0,
 
         Clone       => 0,
@@ -86,6 +87,7 @@ sub Init {
                   FollowDeleted
                   FollowScrips
                   FollowTickets
+                  FollowTransactions
                   FollowACL
                   Clone
                   Incremental
@@ -399,6 +401,8 @@ sub Observe {
         return $self->{FollowTickets};
     } elsif ($obj->isa("RT::ACE")) {
         return $self->{FollowACL};
+    } elsif ($obj->isa("RT::Transaction")) {
+        return $self->{FollowTransactions};
     } elsif ($obj->isa("RT::Scrip") or $obj->isa("RT::Template") or $obj->isa("RT::ObjectScrip")) {
         return $self->{FollowScrips};
     } elsif ($obj->isa("RT::GroupMember")) {
