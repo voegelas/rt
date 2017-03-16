@@ -102,6 +102,8 @@ if ($ARGS{'Save'}) {
         }
     }
 
+    RT->System->QueueCacheNeedsUpdate(1);
+
     my ($ok, $msg) = $user->SetPreferences('QuickSearch', $unwanted);
     push @actions, $ok ? loc('Preferences saved.') : $msg;
 }
