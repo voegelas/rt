@@ -52,6 +52,20 @@ my @tests = (
 
             ($ok, $msg) = $cf->AddToObject($features);
             ok($ok, $msg);
+
+            ($ok, $msg) = $cf->AddValue(Name => '0.1', Description => 'Prototype', SortOrder => '1');
+            ok($ok, $msg);
+
+            ($ok, $msg) = $cf->AddValue(Name => '1.0', Description => 'Gold', SortOrder => '10');
+            ok($ok, $msg);
+
+            # these next two are intentionally added in an order different from their SortOrder
+            ($ok, $msg) = $cf->AddValue(Name => '2.0', Description => 'Remaster', SortOrder => '20');
+            ok($ok, $msg);
+
+            ($ok, $msg) = $cf->AddValue(Name => '1.1', Description => 'Gold Bugfix', SortOrder => '11');
+            ok($ok, $msg);
+
         },
         present => sub {
             my $bugs = RT::Queue->new(RT->SystemUser);
@@ -79,6 +93,19 @@ my @tests = (
             my $general = RT::Queue->new(RT->SystemUser);
             $general->Load('General');
             ok(!$cf->IsAdded($general->Id), 'CF is not on General queue');
+
+            my @values = map { {
+                Name => $_->Name,
+                Description => $_->Description,
+                SortOrder => $_->SortOrder,
+            } } @{ $cf->Values->ItemsArrayRef };
+
+            is_deeply(\@values, [
+                { Name => '0.1', Description => 'Prototype', SortOrder => '1' },
+                { Name => '1.0', Description => 'Gold', SortOrder => '10' },
+                { Name => '1.1', Description => 'Gold Bugfix', SortOrder => '11' },
+                { Name => '2.0', Description => 'Remaster', SortOrder => '20' },
+            ], 'CF values');
         },
     },
 );
