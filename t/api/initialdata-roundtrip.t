@@ -71,6 +71,14 @@ my @tests = (
             is($cf->Type, 'Select', 'Type');
             is($cf->MaxValues, 1, 'MaxValues');
             is($cf->LookupType, RT::Queue->CustomFieldLookupType, 'LookupType');
+
+            ok($cf->IsAdded($bugs->Id), 'CF is on Bugs queue');
+            ok($cf->IsAdded($features->Id), 'CF is on Features queue');
+            ok(!$cf->IsAdded(0), 'CF is not global');
+
+            my $general = RT::Queue->new(RT->SystemUser);
+            $general->Load('General');
+            ok(!$cf->IsAdded($general->Id), 'CF is not on General queue');
         },
     },
 );
