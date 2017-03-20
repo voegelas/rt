@@ -27,6 +27,50 @@ my @tests = (
             is($group->Domain, 'UserDefined', 'Domain');
         },
     },
+    {
+        name => 'Group membership',
+        create => sub {
+            my $outer = RT::Group->new(RT->SystemUser);
+            my ($ok, $msg) = $outer->CreateUserDefinedGroup(Name => 'Outer');
+            ok($ok, $msg);
+
+            my $inner = RT::Group->new(RT->SystemUser);
+            ($ok, $msg) = $inner->CreateUserDefinedGroup(Name => 'Inner');
+            ok($ok, $msg);
+
+            my $user = RT::User->new(RT->SystemUser);
+            ($ok, $msg) = $user->Create(Name => 'User');
+            ok($ok, $msg);
+
+            ($ok, $msg) = $outer->AddMember($inner->PrincipalId);
+            ok($ok, $msg);
+
+            ($ok, $msg) = $inner->AddMember($user->PrincipalId);
+            ok($ok, $msg);
+        },
+        present => sub {
+            my $outer = RT::Group->new(RT->SystemUser);
+            $outer->LoadUserDefinedGroup('Outer');
+            ok($outer->Id, 'Loaded group');
+            is($outer->Name, 'Outer', 'Group name');
+
+            my $inner = RT::Group->new(RT->SystemUser);
+            $inner->LoadUserDefinedGroup('Inner');
+            ok($inner->Id, 'Loaded group');
+            is($inner->Name, 'Inner', 'Group name');
+
+            my $user = RT::User->new(RT->SystemUser);
+            $user->Load('User');
+            ok($user->Id, 'Loaded user');
+            is($user->Name, 'User', 'User name');
+
+            ok($outer->HasMember($inner->PrincipalId), 'outer hasmember inner');
+            ok($inner->HasMember($user->PrincipalId), 'inner hasmember user');
+            ok($outer->HasMemberRecursively($user->PrincipalId), 'outer hasmember user recursively');
+            ok(!$outer->HasMember($user->PrincipalId), 'outer does not have member user directly');
+            ok(!$inner->HasMember($outer->PrincipalId), 'inner does not have member outer');
+        },
+    },
 
     {
         name => 'Custom field on two queues',
