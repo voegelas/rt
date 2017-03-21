@@ -1128,6 +1128,7 @@ sub InsertData {
         $RT::Logger->debug("Creating Catalogs...");
 
         for my $item (@Catalogs) {
+            my $attributes = delete $item->{ Attributes };
             my $new_entry = RT::Catalog->new(RT->SystemUser);
             my ( $return, $msg ) = $new_entry->Create(%$item);
             unless ( $return ) {
@@ -1136,6 +1137,9 @@ sub InsertData {
             else {
                 $RT::Logger->debug( $return ."." );
             }
+
+            $_->{Object} = $new_entry for @{$attributes || []};
+            push @Attributes, @{$attributes || []};
         }
 
         $RT::Logger->debug("done.");
@@ -1144,6 +1148,7 @@ sub InsertData {
         $RT::Logger->debug("Creating Assets...");
 
         for my $item (@Catalogs) {
+            my $attributes = delete $item->{ Attributes };
             my $new_entry = RT::Asset->new(RT->SystemUser);
             my ( $return, $msg ) = $new_entry->Create(%$item);
             unless ( $return ) {
@@ -1152,6 +1157,9 @@ sub InsertData {
             else {
                 $RT::Logger->debug( $return ."." );
             }
+
+            $_->{Object} = $new_entry for @{$attributes || []};
+            push @Attributes, @{$attributes || []};
         }
 
         $RT::Logger->debug("done.");
