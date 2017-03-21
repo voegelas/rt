@@ -6,6 +6,9 @@ Plugin('RT::Extension::Initialdata::JSON');
 Set($InitialdataFormatHandlers, [ 'perl', 'RT::Extension::Initialdata::JSON' ]);
 CONFIG
 
+my $general = RT::Queue->new(RT->SystemUser);
+$general->Load('General');
+
 my @tests = (
     {
         name => 'Simple user-defined group',
@@ -87,7 +90,7 @@ my @tests = (
             ($ok, $msg) = $cf->Create(
                 Name => 'Fixed In',
                 Type => 'SelectSingle',
-                LookupType => RT::Queue->CustomFieldLookupType,
+                LookupType => RT::Ticket->CustomFieldLookupType,
             );
             ok($ok, $msg);
 
@@ -124,18 +127,15 @@ my @tests = (
 
             my $cf = RT::CustomField->new(RT->SystemUser);
             $cf->Load('Fixed In');
-            ok($cf->Id, 'Features queue loaded');
+            ok($cf->Id, 'Fixed In CF loaded');
             is($cf->Name, 'Fixed In');
             is($cf->Type, 'Select', 'Type');
             is($cf->MaxValues, 1, 'MaxValues');
-            is($cf->LookupType, RT::Queue->CustomFieldLookupType, 'LookupType');
+            is($cf->LookupType, RT::Ticket->CustomFieldLookupType, 'LookupType');
 
             ok($cf->IsAdded($bugs->Id), 'CF is on Bugs queue');
             ok($cf->IsAdded($features->Id), 'CF is on Features queue');
             ok(!$cf->IsAdded(0), 'CF is not global');
-
-            my $general = RT::Queue->new(RT->SystemUser);
-            $general->Load('General');
             ok(!$cf->IsAdded($general->Id), 'CF is not on General queue');
 
             my @values = map { {
@@ -245,8 +245,6 @@ my @tests = (
             is($features_objectscrip->Stage, 'TransactionCreate', 'Stage');
             is($features_objectscrip->SortOrder, 99, 'SortOrder');
 
-            my $general = RT::Queue->new(RT->SystemUser);
-            $general->Load('General');
             ok(!$stages->IsAdded($general->Id), 'not added to General');
         },
     },
