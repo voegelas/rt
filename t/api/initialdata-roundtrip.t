@@ -31,7 +31,7 @@ my @tests = (
         },
     },
     {
-        name => 'Group membership',
+        name => 'Group membership and ACLs',
         create => sub {
             my $outer = RT::Group->new(RT->SystemUser);
             my ($ok, $msg) = $outer->CreateUserDefinedGroup(Name => 'Outer');
@@ -56,6 +56,15 @@ my @tests = (
             ok($ok, $msg);
 
             ($ok, $msg) = $general->AddWatcher(Type => 'AdminCc', PrincipalId => $outer->PrincipalId);
+            ok($ok, $msg);
+
+            ($ok, $msg) = $general->AdminCc->PrincipalObj->GrantRight(Object => $general, Right => 'ShowTicket');
+            ok($ok, $msg);
+
+            ($ok, $msg) = $inner->PrincipalObj->GrantRight(Object => $general, Right => 'ModifyTicket');
+            ok($ok, $msg);
+
+            ($ok, $msg) = $user->PrincipalObj->GrantRight(Object => $general, Right => 'OwnTicket');
             ok($ok, $msg);
         },
         present => sub {
@@ -92,6 +101,24 @@ my @tests = (
             ok(!$outer->HasMemberRecursively($unrelated->PrincipalId), 'unrelated group membership');
             ok(!$inner->HasMemberRecursively($unrelated->PrincipalId), 'unrelated group membership');
             ok(!$general->AdminCc->HasMemberRecursively($unrelated->PrincipalId), 'unrelated group membership');
+
+            ok($general->AdminCc->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'AdminCc ShowTicket right');
+            ok($outer->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'outer ShowTicket right');
+            ok($inner->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'inner ShowTicket right');
+            ok($user->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'user ShowTicket right');
+            ok(!$unrelated->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'unrelated ShowTicket right');
+
+            ok(!$general->AdminCc->PrincipalObj->HasRight(Object => $general, Right => 'ModifyTicket'), 'AdminCc ModifyTicket right');
+            ok(!$outer->PrincipalObj->HasRight(Object => $general, Right => 'ModifyTicket'), 'outer ModifyTicket right');
+            ok($inner->PrincipalObj->HasRight(Object => $general, Right => 'ModifyTicket'), 'inner ModifyTicket right');
+            ok($user->PrincipalObj->HasRight(Object => $general, Right => 'ModifyTicket'), 'user ModifyTicket right');
+            ok(!$unrelated->PrincipalObj->HasRight(Object => $general, Right => 'ModifyTicket'), 'unrelated ModifyTicket right');
+
+            ok(!$general->AdminCc->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'AdminCc OwnTicket right');
+            ok(!$outer->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'outer OwnTicket right');
+            ok(!$inner->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'inner OwnTicket right');
+            ok($user->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'inner OwnTicket right');
+            ok(!$unrelated->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'unrelated OwnTicket right');
         },
     },
 
