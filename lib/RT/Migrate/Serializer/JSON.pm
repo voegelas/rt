@@ -220,10 +220,6 @@ sub CanonicalizeReference {
     my $context = shift;
     my $for_key = shift;
 
-    if ($for_key eq 'Creator' || $for_key eq 'LastUpdatedBy') {
-        return $self->_GetObjectByRef($ref)->Id;
-    }
-
     my $record = $self->_GetSerializedByRef($ref)
         or return $ref;
 
@@ -321,8 +317,6 @@ sub CanonicalizeGroupMembers {
         my $member = $self->_GetObjectByRef(delete $record->{MemberId});
         $record->{Class} = ref($member->Object);
         $record->{Name} = $member->Object->Name;
-
-        delete @$record{qw/Creator Created LastUpdated LastUpdatedBy/};
     }
 }
 
@@ -335,7 +329,7 @@ sub CanonicalizeObjectCustomFieldValues {
         my $cf = $self->_GetSerializedByRef(delete $record->{CustomField});
         $record->{CustomField} = $cf->{Name};
 
-        delete @$record{qw/id Created Creator LastUpdated LastUpdatedBy/};
+        delete @$record{qw/id/};
 
         push @{ $object->{CustomFields} }, $record;
     }
@@ -364,7 +358,7 @@ sub CanonicalizeObjects {
         primary_key         => 'Values',
         canonicalize_object => sub {
             my %object = %$_;
-            delete @object{qw/id CustomField Created LastUpdated Creator LastUpdatedBy/};
+            delete @object{qw/id CustomField/};
             return \%object;
         },
     );
@@ -394,7 +388,7 @@ sub CanonicalizeObjects {
         add_to_primary      => { NoAutoGlobal => 1 },
         canonicalize_object => sub {
             my %object = %$_;
-            delete @object{qw/id Scrip Created LastUpdated Creator LastUpdatedBy/};
+            delete @object{qw/id Scrip/};
             $object{ObjectId} = $self->_GetSerializedByRef($object{ObjectId})->{Name}
                 if $object{ObjectId}; # 0 meaning Global can stay 0
             return \%object;
@@ -405,6 +399,10 @@ sub CanonicalizeObjects {
 sub WriteFile {
     my $self = shift;
     my %output;
+
+    for my $record (map { values %$_ } values %{ $self->{Records} }) {
+        delete @$record{qw/Creator Created LastUpdated LastUpdatedBy/};
+    }
 
     $self->CanonicalizeObjects;
     $self->CanonicalizeObjectCustomFieldValues;
