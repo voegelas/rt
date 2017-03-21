@@ -318,6 +318,9 @@ sub CanonicalizeGroups {
     for my $group (values %{ $self->{Records}{'RT::Group'} }) {
         delete $group->{Principal};
         delete $group->{PrincipalId};
+
+        delete $group->{Instance} if $group->{Domain} eq 'UserDefined'
+                                  || $group->{Domain} eq 'SystemInternal';
     }
 }
 
