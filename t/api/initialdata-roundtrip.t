@@ -275,25 +275,28 @@ for my $test (@tests) {
         goto &$warn;
     };
 
-    subtest "$test->{name} (ordinary creation)" => sub {
+    my $name    = delete $test->{name};
+    my $create  = delete $test->{create};
+    my $absent  = delete $test->{absent};
+    my $present = delete $test->{present};
+    fail("Unexpected keys for test #$id ($name): " . join(', ', sort keys %$test)) if keys %$test;
+
+    subtest "$name (ordinary creation)" => sub {
         autorollback(sub {
-            $test->{absent}->() if $test->{absent};
-            $test->{create}->();
-            $test->{present}->() if $test->{present};
+            $absent->() if $absent;
+            $create->();
+            $present->() if $present;
             export_initialdata($directory);
         });
     };
 
-    subtest "$test->{name} (from initialdata)" => sub {
+    subtest "$name (from initialdata)" => sub {
         autorollback(sub {
-            $test->{absent}->() if $test->{absent};
+            $absent->() if $absent;
             import_initialdata($directory);
-            $test->{present}->() if $test->{present};
+            $present->() if $present;
         });
     };
-
-    delete @$test{qw/name create absent present/};
-    fail("Unexpected keys for test #$id: " . join(', ', sort keys %$test)) if keys %$test;
 }
 
 done_testing();
