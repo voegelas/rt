@@ -152,6 +152,104 @@ my @tests = (
             ], 'CF values');
         },
     },
+
+    {
+        name => 'Scrips',
+        create => sub {
+            my $bugs = RT::Queue->new(RT->SystemUser);
+            my ($ok, $msg) = $bugs->Create(Name => 'Bugs');
+            ok($ok, $msg);
+
+            my $features = RT::Queue->new(RT->SystemUser);
+            ($ok, $msg) = $features->Create(Name => 'Features');
+            ok($ok, $msg);
+
+            my $disabled = RT::Scrip->new(RT->SystemUser);
+            ($ok, $msg) = $disabled->Create(
+                Queue => 0,
+                Description => 'Disabled Scrip',
+                Template => 'Blank',
+                ScripCondition => 'User Defined',
+                ScripAction => 'User Defined',
+                CustomIsApplicableCode => 'return "condition"',
+                CustomPrepareCode => 'return "prepare"',
+                CustomCommitCode => 'return "commit"',
+            );
+            ok($ok, $msg);
+            $disabled->SetDisabled(1);
+
+            my $stages = RT::Scrip->new(RT->SystemUser);
+            ($ok, $msg) = $stages->Create(
+                Description => 'Staged Scrip',
+                Template => 'Transaction',
+                ScripCondition => 'On Create',
+                ScripAction => 'Notify Owner',
+            );
+            ok($ok, $msg);
+
+            ($ok, $msg) = $stages->RemoveFromObject(0);
+            ok($ok, $msg);
+
+            ($ok, $msg) = $stages->AddToObject(
+                ObjectId  => $bugs->Id,
+                Stage     => 'TransactionBatch',
+                SortOrder => 42,
+            );
+            ok($ok, $msg);
+
+            ($ok, $msg) = $stages->AddToObject(
+                ObjectId  => $features->Id,
+                Stage     => 'TransactionCreate',
+                SortOrder => 99,
+            );
+            ok($ok, $msg);
+        },
+        present => sub {
+            my $bugs = RT::Queue->new(RT->SystemUser);
+            $bugs->Load('Bugs');
+            ok($bugs->Id, 'Bugs queue loaded');
+            is($bugs->Name, 'Bugs');
+
+            my $features = RT::Queue->new(RT->SystemUser);
+            $features->Load('Features');
+            ok($features->Id, 'Features queue loaded');
+            is($features->Name, 'Features');
+
+            my $disabled = RT::Scrip->new(RT->SystemUser);
+            $disabled->LoadByCols(Description => 'Disabled Scrip');
+            ok($disabled->Id, 'Disabled scrip loaded');
+            is($disabled->Description, 'Disabled Scrip', 'Description');
+            is($disabled->Template, 'Blank', 'Template');
+            is($disabled->ConditionObj->Name, 'User Defined', 'Condition');
+            is($disabled->ActionObj->Name, 'User Defined', 'Action');
+            is($disabled->CustomIsApplicableCode, 'return "condition"', 'Condition code');
+            is($disabled->CustomPrepareCode, 'return "prepare"', 'Prepare code');
+            is($disabled->CustomCommitCode, 'return "commit"', 'Commit code');
+            ok($disabled->Disabled, 'Disabled');
+            ok($disabled->IsGlobal, 'IsGlobal');
+
+            my $stages = RT::Scrip->new(RT->SystemUser);
+            $stages->LoadByCols(Description => 'Staged Scrip');
+            ok($stages->Id, 'Staged scrip loaded');
+            is($stages->Description, 'Staged Scrip');
+            ok(!$stages->Disabled, 'not Disabled');
+            ok(!$stages->IsGlobal, 'not Global');
+
+            my $bug_objectscrip = $stages->IsAdded($bugs->Id);
+            ok($bug_objectscrip, 'added to Bugs');
+            is($bug_objectscrip->Stage, 'TransactionBatch', 'Stage');
+            is($bug_objectscrip->SortOrder, 42, 'SortOrder');
+
+            my $features_objectscrip = $stages->IsAdded($features->Id);
+            ok($features_objectscrip, 'added to Features');
+            is($features_objectscrip->Stage, 'TransactionCreate', 'Stage');
+            is($features_objectscrip->SortOrder, 99, 'SortOrder');
+
+            my $general = RT::Queue->new(RT->SystemUser);
+            $general->Load('General');
+            ok(!$stages->IsAdded($general->Id), 'not added to General');
+        },
+    },
 );
 
 my $id = 0;
