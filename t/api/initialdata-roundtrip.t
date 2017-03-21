@@ -514,7 +514,6 @@ for my $test (@tests) {
     local $SIG{__WARN__} = sub {
         return if $_[0] =~ join '|', (
             qr/^Name in use$/,
-            qr/^Group name '.*' is already in use$/,
             qr/^A Template with that name already exists$/,
             qr/^.* already has the right .* on .*$/,
             qr/^Invalid value for Name$/,
