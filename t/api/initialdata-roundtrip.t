@@ -230,6 +230,55 @@ my @tests = (
     },
 
     {
+        name => 'Custom field LargeContent',
+        create => sub {
+            my $cf = RT::CustomField->new(RT->SystemUser);
+            my ($ok, $msg) = $cf->Create(
+                Name => "Group CF",
+                Type => "FreeformSingle",
+                LookupType => RT::Group->CustomFieldLookupType,
+            );
+            ok($ok, $msg);
+
+            ($ok, $msg) = $cf->AddToObject(RT::Group->new(RT->SystemUser));
+            ok($ok, $msg);
+
+            my $group = RT::Group->new(RT->SystemUser);
+            ($ok, $msg) = $group->CreateUserDefinedGroup(Name => 'Group');
+            ok($ok, $msg);
+
+            ($ok, $msg) = $group->AddCustomFieldValue(
+                Field => $cf->Id,
+                Value => scalar("abc" x 256),
+            );
+            ok($ok, $msg);
+        },
+        present => sub {
+            my $group = RT::Group->new(RT->SystemUser);
+            $group->LoadUserDefinedGroup('Group');
+            ok($group->Id, 'loaded Group');
+            is($group->FirstCustomFieldValue('Group CF'), scalar("abc" x 256), "CF LargeContent");
+        },
+	# the following test peers into the initialdata only to make sure that
+	# we are roundtripping LargeContent as expected; if this starts
+	# failing it's not necessarily a problem, but it's worthy of
+	# investigating whether the "present" tests are still testing
+	# what they were meant to test
+        raw => sub {
+            my $json = shift;
+            my ($group) = grep { $_->{Name} eq 'Group' } @{ $json->{Groups} };
+            ok($group, 'found the group');
+            my ($ocfv) = @{ $group->{CustomFields} };
+            ok($ocfv, 'found the OCFV');
+
+            is($ocfv->{CustomField}, 'Group CF', 'CustomField');
+            is($ocfv->{Content}, undef, 'no Content');
+            is($ocfv->{LargeContent}, scalar("abc" x 256), 'LargeContent');
+            is($ocfv->{ContentType}, "text/plain", 'ContentType');
+        }
+    },
+
+    {
         name => 'Scrips',
         create => sub {
             my $bugs = RT::Queue->new(RT->SystemUser);

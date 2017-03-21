@@ -337,9 +337,6 @@ sub CanonicalizeObjectCustomFieldValues {
 
         delete @$record{qw/id Created Creator LastUpdated LastUpdatedBy/};
 
-        $record->{Content} = $record->{LargeContent} if $record->{LargeContent};
-        delete $record->{LargeContent};
-
         push @{ $object->{CustomFields} }, $record;
     }
 
