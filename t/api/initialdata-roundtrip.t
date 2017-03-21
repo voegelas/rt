@@ -248,6 +248,134 @@ my @tests = (
             ok(!$stages->IsAdded($general->Id), 'not added to General');
         },
     },
+
+    {
+        name => 'Unapplied Objects',
+        create => sub {
+            my $scrip = RT::Scrip->new(RT->SystemUser);
+            my ($ok, $msg) = $scrip->Create(
+                Queue => 0,
+                Description => 'Unapplied Scrip',
+                Template => 'Blank',
+                ScripCondition => 'On Create',
+                ScripAction => 'Notify Owner',
+            );
+            ok($ok, $msg);
+            ($ok, $msg) = $scrip->RemoveFromObject(0);
+            ok($ok, $msg);
+
+            my $cf = RT::CustomField->new(RT->SystemUser);
+            ($ok, $msg) = $cf->Create(
+                Name        => 'Unapplied CF',
+                Type        => 'FreeformSingle',
+                LookupType  => RT::Ticket->CustomFieldLookupType,
+            );
+            ok($ok, $msg);
+
+            my $class = RT::Class->new(RT->SystemUser);
+            ($ok, $msg) = $class->Create(
+                Name => 'Unapplied Class',
+            );
+            ok($ok, $msg);
+
+            my $role = RT::CustomRole->new(RT->SystemUser);
+            ($ok, $msg) = $role->Create(
+                Name => 'Unapplied Custom Role',
+            );
+            ok($ok, $msg);
+        },
+        present => sub {
+            my $scrip = RT::Scrip->new(RT->SystemUser);
+            $scrip->LoadByCols(Description => 'Unapplied Scrip');
+            ok($scrip->Id, 'Unapplied scrip loaded');
+            is($scrip->Description, 'Unapplied Scrip');
+            ok(!$scrip->Disabled, 'not Disabled');
+            ok(!$scrip->IsGlobal, 'not Global');
+            ok(!$scrip->IsAdded($general->Id), 'not applied to General queue');
+
+            my $cf = RT::CustomField->new(RT->SystemUser);
+            $cf->Load('Unapplied CF');
+            ok($cf->Id, 'Unapplied CF loaded');
+            is($cf->Name, 'Unapplied CF');
+            ok(!$cf->Disabled, 'not Disabled');
+            ok(!$cf->IsGlobal, 'not Global');
+            ok(!$cf->IsAdded($general->Id), 'not applied to General queue');
+
+            my $class = RT::Class->new(RT->SystemUser);
+            $class->Load('Unapplied Class');
+            ok($class->Id, 'Unapplied Class loaded');
+            is($class->Name, 'Unapplied Class');
+            ok(!$class->Disabled, 'not Disabled');
+            ok(!$class->IsApplied(0), 'not Global');
+            ok(!$class->IsApplied($general->Id), 'not applied to General queue');
+
+            my $role = RT::CustomRole->new(RT->SystemUser);
+            $role->Load('Unapplied Custom Role');
+            ok($role->Id, 'Unapplied Custom Role loaded');
+            is($role->Name, 'Unapplied Custom Role');
+            ok(!$role->Disabled, 'not Disabled');
+            ok(!$role->IsAdded(0), 'not Global');
+            ok(!$role->IsAdded($general->Id), 'not applied to General queue');
+        },
+    },
+
+    {
+        name => 'Global Objects',
+        create => sub {
+            my $scrip = RT::Scrip->new(RT->SystemUser);
+            my ($ok, $msg) = $scrip->Create(
+                Queue => 0,
+                Description => 'Global Scrip',
+                Template => 'Blank',
+                ScripCondition => 'On Create',
+                ScripAction => 'Notify Owner',
+            );
+            ok($ok, $msg);
+
+            my $cf = RT::CustomField->new(RT->SystemUser);
+            ($ok, $msg) = $cf->Create(
+                Name        => 'Global CF',
+                Type        => 'FreeformSingle',
+                LookupType  => RT::Ticket->CustomFieldLookupType,
+            );
+            ok($ok, $msg);
+            ($ok, $msg) = $cf->AddToObject(RT::Queue->new(RT->SystemUser));
+            ok($ok, $msg);
+
+            my $class = RT::Class->new(RT->SystemUser);
+            ($ok, $msg) = $class->Create(
+                Name => 'Global Class',
+            );
+            ok($ok, $msg);
+            ($ok, $msg) = $class->AddToObject(RT::Queue->new(RT->SystemUser));
+            ok($ok, $msg);
+        },
+        present => sub {
+            my $scrip = RT::Scrip->new(RT->SystemUser);
+            $scrip->LoadByCols(Description => 'Global Scrip');
+            ok($scrip->Id, 'Global scrip loaded');
+            is($scrip->Description, 'Global Scrip');
+            ok(!$scrip->Disabled, 'not Disabled');
+            ok($scrip->IsGlobal, 'Global');
+            ok(!$scrip->IsAdded($general->Id), 'not applied to General queue');
+
+            my $cf = RT::CustomField->new(RT->SystemUser);
+            $cf->Load('Global CF');
+            ok($cf->Id, 'Global CF loaded');
+            is($cf->Name, 'Global CF');
+            ok(!$cf->Disabled, 'not Disabled');
+            ok($cf->IsGlobal, 'Global');
+            ok(!$cf->IsAdded($general->Id), 'not applied to General queue');
+
+            my $class = RT::Class->new(RT->SystemUser);
+            $class->Load('Global Class');
+            ok($class->Id, 'Global Class loaded');
+            is($class->Name, 'Global Class');
+            ok(!$class->Disabled, 'not Disabled');
+            ok($class->IsApplied(0), 'Global');
+            ok(!$class->IsApplied($general->Id), 'not applied to General queue');
+        },
+    },
 );
 
 my $id = 0;
