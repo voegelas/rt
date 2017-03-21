@@ -106,6 +106,7 @@ GetOptions(
     "tickets!",
     "transactions!",
     "acls!",
+    "assets!",
 
     "clone",
     "incremental",
@@ -129,6 +130,7 @@ $args{FollowScrips}       = $OPT{scrips}       if defined $OPT{scrips};
 $args{FollowTickets}      = $OPT{tickets}      if defined $OPT{tickets};
 $args{FollowTransactions} = $OPT{transactions} if defined $OPT{transactions};
 $args{FollowACL}          = $OPT{acls}         if defined $OPT{acls};
+$args{FollowAssets}       = $OPT{assets}       if defined $OPT{assets};
 
 $args{Clone}         = $OPT{clone}       if $OPT{clone};
 $args{Incremental}   = $OPT{incremental} if $OPT{incremental};
@@ -137,7 +139,7 @@ $args{GC}   = defined $OPT{gc}   ? $OPT{gc}   : 5000;
 $args{Page} = defined $OPT{page} ? $OPT{page} : 100;
 
 if (($OPT{clone} or $OPT{incremental})
-        and grep { /^(users|groups|deleted|scrips|tickets|transactions|acls)$/ } keys %OPT) {
+        and grep { /^(users|groups|deleted|scrips|tickets|transactions|acls|assets)$/ } keys %OPT) {
     die "You cannot specify object types when cloning.\n\nPlease see $0 --help.\n";
 }
 
@@ -199,6 +201,7 @@ sub estimate {
         User  Group  GroupMember Attribute
         CustomField CustomFieldValue
         ObjectCustomField ObjectCustomFieldValue
+        Catalog Asset
                                  /;
 
     for my $class (@types) {
@@ -208,7 +211,8 @@ sub estimate {
             my $objs = $collection->new( RT->SystemUser );
             $objs->FindAllRows;
             $objs->UnLimit;
-            $objs->{allow_deleted_search} = 1 if $class eq "RT::Ticket";
+            $objs->{allow_deleted_search} = 1
+                if $class eq "RT::Ticket" || $class eq "RT::Asset";
             $e{$class} = $objs->DBIx::SearchBuilder::Count;
         }
         print "\r", " "x60, "\r";
@@ -315,10 +319,16 @@ By default, all groups are serialized; passing C<--no-groups> limits it
 to only system-internal groups, which are needed for internal
 consistency.
 
+=item B<--no-assets>
+
+By default, all assets are serialized; passing C<--no-assets> skips
+assets during serialization.
+
 =item B<--no-deleted>
 
-By default, all tickets, including deleted tickets, are serialized;
-passing C<--no-deleted> skips deleted tickets during serialization.
+By default, all tickets and assets, including deleted ones, are
+serialized; passing C<--no-deleted> skips deleted tickets and assets
+during serialization.
 
 =item B<--scrips>
 

@@ -158,7 +158,7 @@ my @tests = (
         create => sub {
             my %extra = (
                 Group => { method => 'CreateUserDefinedGroup' },
-                Asset => { Catalog => 'General assets' },
+                Asset => undef,
                 Article => undef,
                 Ticket => undef,
                 Transaction => undef,
@@ -203,6 +203,7 @@ my @tests = (
                 Ticket => undef,
                 Article => undef,
                 User => undef,
+                Asset => undef,
             );
 
             for my $type (qw/Asset Article Group Queue Ticket Transaction User/) {
@@ -470,6 +471,7 @@ for my $test (@tests) {
             qr/^Invalid value for Name$/,
             qr/^Queue already exists$/,
             qr/^Use of uninitialized value in/,
+            qr/^Invalid Name \(names must be unique and may not be all digits\)$/,
         );
 
         # Avoid reporting this anonymous call frame as the source of the warning
@@ -533,6 +535,8 @@ sub export_initialdata {
         FollowACL          => 1,
         FollowScrips       => 1,
         FollowTransactions => 0,
+        FollowTickets      => 0,
+        FollowAssets       => 0,
     );
 
     $migrator->Export;

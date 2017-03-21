@@ -70,6 +70,7 @@ sub Init {
         FollowTickets       => 1,
         FollowTransactions  => 1,
         FollowACL           => 0,
+        FollowAssets        => 1,
 
         Clone       => 0,
         Incremental => 0,
@@ -88,6 +89,7 @@ sub Init {
                   FollowScrips
                   FollowTickets
                   FollowTransactions
+                  FollowAssets
                   FollowACL
                   Clone
                   Incremental
@@ -294,7 +296,7 @@ sub PushBasics {
         $self->PushCollections(qw(Topics Classes));
     }
 
-    $self->PushCollections(qw(Queues));
+    $self->PushCollections(qw(Queues Catalogs));
 }
 
 sub InitStream {
@@ -399,6 +401,9 @@ sub Observe {
     if ($obj->isa("RT::Ticket")) {
         return 0 if $obj->Status eq "deleted" and not $self->{FollowDeleted};
         return $self->{FollowTickets};
+    } elsif ($obj->isa("RT::Asset")) {
+        return 0 if $obj->Status eq "deleted" and not $self->{FollowDeleted};
+        return $self->{FollowAssets};
     } elsif ($obj->isa("RT::ACE")) {
         return $self->{FollowACL};
     } elsif ($obj->isa("RT::Transaction")) {
