@@ -242,7 +242,7 @@ sub _CanonicalizeManyToMany {
     my $object_primary_ref = $args{object_primary_ref};
     my $primary_class = $args{primary_class};
     my $primary_key = $args{primary_key};
-    my %add_to_primary = %{ $args{add_to_primary} || {} };
+    my $add_to_primary = $args{add_to_primary};
     my $canonicalize_object = $args{canonicalize_object};
 
     if (my $objects = delete $self->{Records}{$object_class}) {
@@ -257,7 +257,9 @@ sub _CanonicalizeManyToMany {
                   sort { $a->{SortOrder} <=> $b->{SortOrder} }
                   @{ $primary->{$primary_key} || [] };
 
-            %$primary = (%$primary, %add_to_primary);
+            if (ref($add_to_primary) eq 'CODE') {
+                $add_to_primary->($primary);
+            }
         }
     }
 }
@@ -394,7 +396,10 @@ sub CanonicalizeObjects {
         object_primary_ref  => 'Scrip',
         primary_class       => 'RT::Scrip',
         primary_key         => 'Queue',
-        add_to_primary      => { NoAutoGlobal => 1 },
+        add_to_primary      => sub {
+            my $primary = shift;
+            $primary->{NoAutoGlobal} = 1 if @{ $primary->{Queue} || [] } == 0;
+        },
         canonicalize_object => sub {
             my %object = %$_;
             delete @object{qw/id Scrip/};
