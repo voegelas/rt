@@ -482,6 +482,7 @@ for my $test (@tests) {
     my $create  = delete $test->{create};
     my $absent  = delete $test->{absent};
     my $present = delete $test->{present};
+    my $raw     = delete $test->{raw};
     fail("Unexpected keys for test #$id ($name): " . join(', ', sort keys %$test)) if keys %$test;
 
     subtest "$name (ordinary creation)" => sub {
@@ -492,6 +493,22 @@ for my $test (@tests) {
             export_initialdata($directory);
         });
     };
+
+    if ($raw) {
+        subtest "$name (testing initialdata)" => sub {
+            my $file = File::Spec->catfile($directory, "initialdata.json");
+            my $content = do {
+                local $/;
+                open (my $f, '<:encoding(UTF-8)', $file)
+                    or die "Cannot open initialdata file '$file' for read: $@";
+                <$f>;
+            };
+            require JSON;
+            my $json = JSON->new->decode($content);
+
+            $raw->($json, $content);
+        };
+    }
 
     subtest "$name (from export-$id/initialdata.json)" => sub {
         autorollback(sub {
