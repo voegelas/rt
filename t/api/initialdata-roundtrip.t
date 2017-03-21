@@ -156,6 +156,15 @@ my @tests = (
     {
         name => 'Custom field lookup types',
         create => sub {
+            my %extra = (
+                Group => { method => 'CreateUserDefinedGroup' },
+                Asset => { Catalog => 'General assets' },
+                Article => undef,
+                Ticket => undef,
+                Transaction => undef,
+                User => undef,
+            );
+
             for my $type (qw/Asset Article Group Queue Ticket Transaction User/) {
                 my $class = "RT::$type";
                 my $cf = RT::CustomField->new(RT->SystemUser);
@@ -165,9 +174,37 @@ my @tests = (
                     LookupType => $class->CustomFieldLookupType,
                 );
                 ok($ok, $msg);
+
+                # apply globally
+                ($ok, $msg) = $cf->AddToObject($cf->RecordClassFromLookupType->new(RT->SystemUser));
+                ok($ok, $msg);
+
+                next if exists($extra{$type}) && !defined($extra{$type});
+
+                my $obj = $class->new(RT->SystemUser);
+                my $method = delete($extra{$type}{method}) || 'Create';
+                ($ok, $msg) = $obj->$method(
+                    Name => $type,
+                    %{ $extra{$type} || {} },
+                );
+                ok($ok, "created $type: $msg");
+                ok($obj->Id, "loaded $type");
+
+                ($ok, $msg) = $obj->AddCustomFieldValue(
+                    Field => $cf->Id,
+                    Value => "$type Value",
+                );
+                ok($ok, $msg);
             }
         },
         present => sub {
+            my %load = (
+                Transaction => undef,
+                Ticket => undef,
+                Article => undef,
+                User => undef,
+            );
+
             for my $type (qw/Asset Article Group Queue Ticket Transaction User/) {
                 my $class = "RT::$type";
                 my $cf = RT::CustomField->new(RT->SystemUser);
@@ -177,6 +214,16 @@ my @tests = (
                 is($cf->Type, 'Freeform', 'Type');
                 is($cf->MaxValues, 1, 'MaxValues');
                 is($cf->LookupType, $class->CustomFieldLookupType, 'LookupType');
+
+                next if exists($load{$type}) && !defined($load{$type});
+
+                my $obj = $class->new(RT->SystemUser);
+                $obj->LoadByCols(
+                    %{ $load{$type} || { Name => $type } },
+                );
+                ok($obj->Id, "loaded $type");
+
+                is($obj->FirstCustomFieldValue($cf->Id), "$type Value", "CF value for $type");
             }
         },
     },
