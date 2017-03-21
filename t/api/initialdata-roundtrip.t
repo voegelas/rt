@@ -493,7 +493,7 @@ for my $test (@tests) {
         });
     };
 
-    subtest "$name (from initialdata)" => sub {
+    subtest "$name (from export-$id/initialdata.json)" => sub {
         autorollback(sub {
             $absent->() if $absent;
             import_initialdata($directory);
