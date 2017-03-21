@@ -193,6 +193,9 @@ for my $test (@tests) {
             $test->{present}->() if $test->{present};
         });
     };
+
+    delete @$test{qw/name create absent present/};
+    fail("Unexpected keys for test #$id: " . join(', ', sort keys %$test)) if keys %$test;
 }
 
 done_testing();
