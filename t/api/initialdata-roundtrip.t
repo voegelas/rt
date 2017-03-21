@@ -207,7 +207,7 @@ my @tests = (
             my %extra = (
                 Group => { method => 'CreateUserDefinedGroup' },
                 Asset => undef,
-                Article => undef,
+                Article => { Class => 'General' },
                 Ticket => undef,
                 Transaction => undef,
                 User => undef,
@@ -249,7 +249,6 @@ my @tests = (
             my %load = (
                 Transaction => undef,
                 Ticket => undef,
-                Article => undef,
                 User => undef,
                 Asset => undef,
             );
@@ -590,6 +589,95 @@ my @tests = (
             is($queue->Description, 'override for Swedes', 'Description');
             is($queue->Content, 'Hello Hallå', 'Content');
             is($queue->Type, 'Simple', 'Type');
+        },
+    },
+    {
+        name => 'Articles',
+        create => sub {
+            my $class = RT::Class->new(RT->SystemUser);
+            my ($ok, $msg) = $class->Create(
+                Name => 'Test',
+            );
+            ok($ok, $msg);
+
+            my $content = RT::CustomField->new(RT->SystemUser);
+            $content->LoadByCols(
+                Name => "Content",
+                Type => "Text",
+                LookupType => RT::Article->CustomFieldLookupType,
+            );
+            ok($content->Id, "loaded builtin Content CF");
+
+            my $tags = RT::CustomField->new(RT->SystemUser);
+            ($ok, $msg) = $tags->Create(
+                Name => "Tags",
+                Type => "FreeformMultiple",
+                LookupType => RT::Article->CustomFieldLookupType,
+            );
+            ok($ok, $msg);
+            ($ok, $msg) = $tags->AddToObject($class);
+            ok($ok, $msg);
+
+            my $clearance = RT::CustomField->new(RT->SystemUser);
+            ($ok, $msg) = $clearance->Create(
+                Name => "Clearance",
+                Type => "SelectSingle",
+                LookupType => RT::Article->CustomFieldLookupType,
+            );
+            ok($ok, $msg);
+            ($ok, $msg) = $clearance->AddToObject($class);
+            ok($ok, $msg);
+
+            ($ok, $msg) = $clearance->AddValue(Name => 'Unclassified');
+            ok($ok, $msg);
+            ($ok, $msg) = $clearance->AddValue(Name => 'Classified');
+            ok($ok, $msg);
+            ($ok, $msg) = $clearance->AddValue(Name => 'Top Secret');
+            ok($ok, $msg);
+
+            my $coffee = RT::Article->new(RT->SystemUser);
+            ($ok, $msg) = $coffee->Create(
+                Class => 'Test',
+                Name  => 'Coffee time',
+                "CustomField-" . $content->Id => 'Always',
+                "CustomField-" . $clearance->Id => 'Unclassified',
+                "CustomField-" . $tags->Id => ['drink', 'coffee', 'how the humans live'],
+            );
+            ok($ok, $msg);
+
+            my $twd = RT::Article->new(RT->SystemUser);
+            ($ok, $msg) = $twd->Create(
+                Class => 'Test',
+                Name  => 'Total world domination plans',
+                "CustomField-" . $content->Id => 'REDACTED',
+                "CustomField-" . $clearance->Id => 'Top Secret',
+                "CustomField-" . $tags->Id => ['snakes', 'clowns'],
+            );
+            ok($ok, $msg);
+        },
+        present => sub {
+            my $class = RT::Class->new(RT->SystemUser);
+            $class->Load('Test');
+            ok($class->Id, 'loaded class');
+            is($class->Name, 'Test', 'Name');
+
+            my $coffee = RT::Article->new(RT->SystemUser);
+            $coffee->LoadByCols(Name => 'Coffee time');
+            ok($coffee->Id, 'loaded article');
+            is($coffee->Name, 'Coffee time', 'Name');
+            is($coffee->Class, $class->Id, 'Class');
+            is($coffee->FirstCustomFieldValue('Content'), 'Always', 'Content CF');
+            is($coffee->FirstCustomFieldValue('Clearance'), 'Unclassified', 'Clearance CF');
+            is($coffee->CustomFieldValuesAsString('Tags', Separator => '.'), 'drink.coffee.how the humans live', 'Tags CF');
+
+            my $twd = RT::Article->new(RT->SystemUser);
+            $twd->LoadByCols(Name => 'Coffee time');
+            ok($twd->Id, 'loaded article');
+            is($twd->Name, 'Coffee time', 'Name');
+            is($twd->Class, $class->Id, 'Class');
+            is($twd->FirstCustomFieldValue('Content'), 'REDACTED', 'Content CF');
+            is($twd->FirstCustomFieldValue('Clearance'), 'Top Secret', 'Clearance CF');
+            is($twd->CustomFieldValuesAsString('Tags', Separator => '.'), 'snakes.clowns', 'Tags CF');
         },
     },
 );

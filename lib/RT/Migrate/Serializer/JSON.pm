@@ -381,6 +381,14 @@ sub CanonicalizeObjectCustomFieldValues {
     delete $self->{Records}{'RT::ObjectCustomFieldValue'};
 }
 
+sub CanonicalizeArticles {
+    my $self = shift;
+
+    for my $record (values %{ $self->{Records}{'RT::Article'} }) {
+        delete $record->{URI};
+    }
+}
+
 sub CanonicalizeObjects {
     my $self = shift;
 
@@ -490,6 +498,7 @@ sub WriteFile {
     $self->CanonicalizeGroups;
     $self->CanonicalizeGroupMembers;
     $self->CanonicalizeCustomFields;
+    $self->CanonicalizeArticles;
 
     delete $self->{Records}{'RT::Attribute'};
 
