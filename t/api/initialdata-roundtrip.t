@@ -1,7 +1,6 @@
 use utf8;
 use strict;
 use warnings;
-use Encode 'encode_utf8';
 
 use RT::Test tests => undef, config => << 'CONFIG';
 Plugin('RT::Extension::Initialdata::JSON');
@@ -558,7 +557,7 @@ my @tests = (
                 Name => 'Initialdata test',
                 Queue => 0,
                 Description => 'foo',
-                Content => encode_utf8("Hello こんにちは"),
+                Content => "Hello こんにちは",
                 Type => "Simple",
             );
             ok($ok, $msg);
@@ -568,7 +567,7 @@ my @tests = (
                 Name => 'Initialdata test',
                 Queue => $general->Id,
                 Description => 'override for Swedes',
-                Content => encode_utf8("Hello Hallå"),
+                Content => "Hello Hallå",
                 Type => "Simple",
             );
             ok($ok, $msg);

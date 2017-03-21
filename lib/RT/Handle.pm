@@ -864,7 +864,7 @@ sub InsertData {
 
     my $datafile_content = do {
         local $/;
-        open (my $f, '<:encoding(UTF-8)', $datafile)
+        open (my $f, '<', $datafile)
             or die "Cannot open initialdata file '$datafile' for read: $@";
         <$f>;
     };

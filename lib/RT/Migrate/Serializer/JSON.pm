@@ -150,7 +150,7 @@ sub PushBasics {
 
 sub JSON {
     my $self = shift;
-    return $self->{JSON} ||= JSON->new->pretty->canonical->utf8;
+    return $self->{JSON} ||= JSON->new->pretty->canonical;
 }
 
 sub OpenFile {
