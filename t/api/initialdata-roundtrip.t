@@ -154,6 +154,34 @@ my @tests = (
     },
 
     {
+        name => 'Custom field lookup types',
+        create => sub {
+            for my $type (qw/Asset Article Group Queue Ticket Transaction User/) {
+                my $class = "RT::$type";
+                my $cf = RT::CustomField->new(RT->SystemUser);
+                my ($ok, $msg) = $cf->Create(
+                    Name => "$type CF",
+                    Type => "FreeformSingle",
+                    LookupType => $class->CustomFieldLookupType,
+                );
+                ok($ok, $msg);
+            }
+        },
+        present => sub {
+            for my $type (qw/Asset Article Group Queue Ticket Transaction User/) {
+                my $class = "RT::$type";
+                my $cf = RT::CustomField->new(RT->SystemUser);
+                $cf->Load("$type CF");
+                ok($cf->Id, "loaded $type CF");
+                is($cf->Name, "$type CF", 'Name');
+                is($cf->Type, 'Freeform', 'Type');
+                is($cf->MaxValues, 1, 'MaxValues');
+                is($cf->LookupType, $class->CustomFieldLookupType, 'LookupType');
+            }
+        },
+    },
+
+    {
         name => 'Scrips',
         create => sub {
             my $bugs = RT::Queue->new(RT->SystemUser);
