@@ -1,5 +1,7 @@
+use utf8;
 use strict;
 use warnings;
+use Encode 'encode_utf8';
 
 use RT::Test tests => undef, config => << 'CONFIG';
 Plugin('RT::Extension::Initialdata::JSON');
@@ -546,6 +548,49 @@ my @tests = (
             ok(!$class->Disabled, 'not Disabled');
             ok($class->IsApplied(0), 'Global');
             ok(!$class->IsApplied($general->Id), 'not applied to General queue');
+        },
+    },
+    {
+        name => 'Templates',
+        create => sub {
+            my $global = RT::Template->new(RT->SystemUser);
+            my ($ok, $msg) = $global->Create(
+                Name => 'Initialdata test',
+                Queue => 0,
+                Description => 'foo',
+                Content => encode_utf8("Hello こんにちは"),
+                Type => "Simple",
+            );
+            ok($ok, $msg);
+
+            my $queue = RT::Template->new(RT->SystemUser);
+            ($ok, $msg) = $queue->Create(
+                Name => 'Initialdata test',
+                Queue => $general->Id,
+                Description => 'override for Swedes',
+                Content => encode_utf8("Hello Hallå"),
+                Type => "Simple",
+            );
+            ok($ok, $msg);
+        },
+        present => sub {
+            my $global = RT::Template->new(RT->SystemUser);
+            $global->LoadGlobalTemplate('Initialdata test');
+            ok($global->Id, 'loaded template');
+            is($global->Name, 'Initialdata test', 'Name');
+            is($global->Queue, 0, 'Queue');
+            is($global->Description, 'foo', 'Description');
+            is($global->Content, 'Hello こんにちは', 'Content');
+            is($global->Type, 'Simple', 'Type');
+
+            my $queue = RT::Template->new(RT->SystemUser);
+            $queue->LoadQueueTemplate(Name => 'Initialdata test', Queue => $general->Id);
+            ok($queue->Id, 'loaded template');
+            is($queue->Name, 'Initialdata test', 'Name');
+            is($queue->Queue, $general->Id, 'Queue');
+            is($queue->Description, 'override for Swedes', 'Description');
+            is($queue->Content, 'Hello Hallå', 'Content');
+            is($queue->Type, 'Simple', 'Type');
         },
     },
 );
