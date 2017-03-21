@@ -97,7 +97,6 @@ sub Create {
         Name         => '',
         Summary      => '',
         Class        => '0',
-        CustomFields => {},
         Links        => {},
         Topics       => [],
         Disabled    => 0,
