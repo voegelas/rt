@@ -1329,10 +1329,8 @@ sub InstanceObj {
     my $class;
     if ( $self->Domain eq 'ACLEquivalence' ) {
         $class = "RT::User";
-    } elsif ($self->Domain eq 'RT::Queue-Role') {
-        $class = "RT::Queue";
-    } elsif ($self->Domain eq 'RT::Ticket-Role') {
-        $class = "RT::Ticket";
+    } else {
+        $class = $self->RoleClass;
     }
 
     return unless $class;
