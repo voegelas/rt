@@ -41,6 +41,10 @@ my @tests = (
             ($ok, $msg) = $inner->CreateUserDefinedGroup(Name => 'Inner');
             ok($ok, $msg);
 
+            my $unrelated = RT::Group->new(RT->SystemUser);
+            ($ok, $msg) = $unrelated->CreateUserDefinedGroup(Name => 'Unrelated');
+            ok($ok, $msg);
+
             my $user = RT::User->new(RT->SystemUser);
             ($ok, $msg) = $user->Create(Name => 'User');
             ok($ok, $msg);
@@ -49,6 +53,9 @@ my @tests = (
             ok($ok, $msg);
 
             ($ok, $msg) = $inner->AddMember($user->PrincipalId);
+            ok($ok, $msg);
+
+            ($ok, $msg) = $general->AddWatcher(Type => 'AdminCc', PrincipalId => $outer->PrincipalId);
             ok($ok, $msg);
         },
         present => sub {
@@ -62,6 +69,11 @@ my @tests = (
             ok($inner->Id, 'Loaded group');
             is($inner->Name, 'Inner', 'Group name');
 
+            my $unrelated = RT::Group->new(RT->SystemUser);
+            $unrelated->LoadUserDefinedGroup('Unrelated');
+            ok($unrelated->Id, 'Loaded group');
+            is($unrelated->Name, 'Unrelated', 'Group name');
+
             my $user = RT::User->new(RT->SystemUser);
             $user->Load('User');
             ok($user->Id, 'Loaded user');
@@ -72,6 +84,14 @@ my @tests = (
             ok($outer->HasMemberRecursively($user->PrincipalId), 'outer hasmember user recursively');
             ok(!$outer->HasMember($user->PrincipalId), 'outer does not have member user directly');
             ok(!$inner->HasMember($outer->PrincipalId), 'inner does not have member outer');
+
+            ok($general->AdminCc->HasMember($outer->PrincipalId), 'queue AdminCc');
+            ok($general->AdminCc->HasMemberRecursively($inner->PrincipalId), 'queue AdminCc');
+            ok($general->AdminCc->HasMemberRecursively($user->PrincipalId), 'queue AdminCc');
+
+            ok(!$outer->HasMemberRecursively($unrelated->PrincipalId), 'unrelated group membership');
+            ok(!$inner->HasMemberRecursively($unrelated->PrincipalId), 'unrelated group membership');
+            ok(!$general->AdminCc->HasMemberRecursively($unrelated->PrincipalId), 'unrelated group membership');
         },
     },
 
