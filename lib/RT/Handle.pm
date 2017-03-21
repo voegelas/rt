@@ -1133,7 +1133,7 @@ sub InsertData {
     if ( @Assets ) {
         $RT::Logger->debug("Creating Assets...");
 
-        for my $item (@Catalogs) {
+        for my $item (@Assets) {
             my $attributes = delete $item->{ Attributes };
             my $ocfvs = delete $item->{ CustomFields };
 
