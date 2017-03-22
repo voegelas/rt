@@ -538,6 +538,30 @@ my @tests = (
             );
             ok($ok, $msg);
 
+            my $enabled_group = RT::Group->new(RT->SystemUser);
+            ($ok, $msg) = $enabled_group->CreateUserDefinedGroup(
+                Name => 'Enabled Group',
+            );
+            ok($ok, $msg);
+
+            my $disabled_group = RT::Group->new(RT->SystemUser);
+            ($ok, $msg) = $disabled_group->CreateUserDefinedGroup(
+                Name => 'Disabled Group',
+            );
+            ok($ok, $msg);
+
+            my $enabled_user = RT::User->new(RT->SystemUser);
+            ($ok, $msg) = $enabled_user->Create(
+                Name => 'Enabled User',
+            );
+            ok($ok, $msg);
+
+            my $disabled_user = RT::User->new(RT->SystemUser);
+            ($ok, $msg) = $disabled_user->Create(
+                Name => 'Disabled User',
+            );
+            ok($ok, $msg);
+
             for my $object ($enabled_cf, $disabled_cf,
                             $enabled_scrip, $disabled_scrip,
                             $enabled_class, $disabled_class,
@@ -556,11 +580,24 @@ my @tests = (
                 ok($ok, $msg);
             }
 
-            for my $object ($disabled_queue,
-                            $disabled_cf,
-                            $disabled_scrip,
-                            $disabled_class,
-                            $disabled_role) {
+            for my $principal ($enabled_group, $disabled_group,
+                               $enabled_user, $disabled_user) {
+                ($ok, $msg) = $principal->PrincipalObj->GrantRight(Object => RT->System, Right => 'SeeQueue');
+                ok($ok, $msg);
+
+                for my $queue ($general, $disabled_queue) {
+                    ($ok, $msg) = $principal->PrincipalObj->GrantRight(Object => $queue, Right => 'ShowTicket');
+                    ok($ok, $msg);
+
+                    ($ok, $msg) = $queue->AddWatcher(Type => 'AdminCc', PrincipalId => $principal->PrincipalId);
+                    ok($ok, $msg);
+                }
+            }
+
+            for my $object ($disabled_queue, $disabled_cf,
+                            $disabled_scrip, $disabled_class,
+                            $disabled_role, $disabled_group,
+                            $disabled_user) {
                 ($ok, $msg) = $object->SetDisabled(1);
                 ok($ok, $msg);
             }
@@ -606,9 +643,32 @@ my @tests = (
             my $disabled_role = RT::CustomRole->new(RT->SystemUser);
             $disabled_role->Load('Disabled Role');
 
+            my $enabled_group = RT::Group->new(RT->SystemUser);
+            $enabled_group->LoadUserDefinedGroup('Enabled Group');
+            ok($enabled_group->Id, 'loaded Enabled Group');
+            is($enabled_group->Name, 'Enabled Group', 'Enabled Group Name');
+            ok($enabled_group->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'Enabled Group has queue right');
+            ok($enabled_group->PrincipalObj->HasRight(Object => RT->System, Right => 'SeeQueue'), 'Enabled Group has global right');
+            ok($general->AdminCc->HasMember($enabled_group->PrincipalObj), 'Enabled Group still queue watcher');
+
+            my $disabled_group = RT::Group->new(RT->SystemUser);
+            $disabled_group->LoadUserDefinedGroup('Disabled Group');
+
+            my $enabled_user = RT::User->new(RT->SystemUser);
+            $enabled_user->Load('Enabled User');
+            ok($enabled_user->Id, 'loaded Enabled User');
+            is($enabled_user->Name, 'Enabled User', 'Enabled User Name');
+            ok($enabled_user->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'Enabled User has queue right');
+            ok($enabled_user->PrincipalObj->HasRight(Object => RT->System, Right => 'SeeQueue'), 'Enabled User has global right');
+            ok($general->AdminCc->HasMember($enabled_user->PrincipalObj), 'Enabled User still queue watcher');
+
+            my $disabled_user = RT::User->new(RT->SystemUser);
+            $disabled_user->Load('Disabled User');
+
             for my $object ($disabled_queue, $disabled_cf,
                             $disabled_scrip, $disabled_class,
-                            $disabled_role) {
+                            $disabled_role, $disabled_group,
+                            $disabled_user) {
                 if ($from_initialdata) {
                     ok(!$object->Id, "disabled " . ref($object) . " excluded");
                 }

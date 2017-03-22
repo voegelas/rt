@@ -383,6 +383,18 @@ sub Process {
                # Disabled for OCFV means "old value" which we want to keep
                # in the history
                && !$obj->isa('RT::ObjectCustomFieldValue');
+
+        if ($obj->isa('RT::ACE')) {
+            my $principal = $obj->PrincipalObj;
+            return if $principal->Disabled;
+
+            # [issues.bestpractical.com #32662]
+            return if $principal->Object->Domain eq 'ACLEquivalence'
+                   && $principal->Object->InstanceObj->Disabled;
+
+            return if !$obj->Object->isa('RT::System')
+                   && $obj->Object->Disabled;
+        }
     }
 
     return $self->SUPER::Process( @_ );
@@ -417,6 +429,17 @@ sub Observe {
         return 0 if $obj->Status eq "deleted" and not $self->{FollowDeleted};
         return $self->{FollowAssets};
     } elsif ($obj->isa("RT::ACE")) {
+        if (!$self->{FollowDisabled}) {
+            my $principal = $obj->PrincipalObj;
+            return 0 if $principal->Disabled;
+
+            # [issues.bestpractical.com #32662]
+            return 0 if $principal->Object->Domain eq 'ACLEquivalence'
+                     && $principal->Object->InstanceObj->Disabled;
+
+            return 0 if !$obj->Object->isa('RT::System')
+                     && $obj->Object->Disabled;
+        }
         return $self->{FollowACL};
     } elsif ($obj->isa("RT::Transaction")) {
         return $self->{FollowTransactions};
@@ -428,6 +451,10 @@ sub Observe {
             return 0 unless $grp->UID eq $from;
         } elsif ($grp->Domain eq "SystemInternal") {
             return 0 if $grp->UID eq $from;
+        }
+        if (!$self->{FollowDisabled}) {
+            return 0 if $grp->Disabled
+                     || $obj->MemberObj->Disabled;
         }
     }
 
