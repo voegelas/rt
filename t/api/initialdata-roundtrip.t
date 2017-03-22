@@ -672,9 +672,9 @@ my @tests = (
             is($coffee->CustomFieldValuesAsString('Tags', Separator => '.'), 'drink.coffee.how the humans live', 'Tags CF');
 
             my $twd = RT::Article->new(RT->SystemUser);
-            $twd->LoadByCols(Name => 'Coffee time');
+            $twd->LoadByCols(Name => 'Total world domination plans');
             ok($twd->Id, 'loaded article');
-            is($twd->Name, 'Coffee time', 'Name');
+            is($twd->Name, 'Total world domination plans', 'Name');
             is($twd->Class, $class->Id, 'Class');
             is($twd->FirstCustomFieldValue('Content'), 'REDACTED', 'Content CF');
             is($twd->FirstCustomFieldValue('Clearance'), 'Top Secret', 'Clearance CF');
