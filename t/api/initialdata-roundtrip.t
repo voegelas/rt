@@ -468,6 +468,158 @@ my @tests = (
     },
 
     {
+        name => 'Disabled many-to-many relationships',
+        create => sub {
+            my $disabled_queue = RT::Queue->new(RT->SystemUser);
+            my ($ok, $msg) = $disabled_queue->Create(
+                Name => 'Disabled Queue',
+            );
+            ok($ok, $msg);
+
+            my $enabled_cf = RT::CustomField->new(RT->SystemUser);
+            ($ok, $msg) = $enabled_cf->Create(
+                Name => 'Enabled CF',
+                Type => 'FreeformSingle',
+                LookupType => RT::Ticket->CustomFieldLookupType,
+            );
+            ok($ok, $msg);
+
+            my $disabled_cf = RT::CustomField->new(RT->SystemUser);
+            ($ok, $msg) = $disabled_cf->Create(
+                Name => 'Disabled CF',
+                Type => 'FreeformSingle',
+                LookupType => RT::Ticket->CustomFieldLookupType,
+            );
+            ok($ok, $msg);
+
+            my $enabled_scrip = RT::Scrip->new(RT->SystemUser);
+            ($ok, $msg) = $enabled_scrip->Create(
+                Queue => 0,
+                Description => 'Enabled Scrip',
+                Template => 'Blank',
+                ScripCondition => 'On Create',
+                ScripAction => 'Notify Owner',
+            );
+            ok($ok, $msg);
+            $enabled_scrip->RemoveFromObject(0);
+
+            my $disabled_scrip = RT::Scrip->new(RT->SystemUser);
+            ($ok, $msg) = $disabled_scrip->Create(
+                Queue => 0,
+                Description => 'Disabled Scrip',
+                Template => 'Blank',
+                ScripCondition => 'On Create',
+                ScripAction => 'Notify Owner',
+            );
+            ok($ok, $msg);
+            $disabled_scrip->RemoveFromObject(0);
+
+            my $enabled_class = RT::Class->new(RT->SystemUser);
+            ($ok, $msg) = $enabled_class->Create(
+                Name => 'Enabled Class',
+            );
+            ok($ok, $msg);
+
+            my $disabled_class = RT::Class->new(RT->SystemUser);
+            ($ok, $msg) = $disabled_class->Create(
+                Name => 'Disabled Class',
+            );
+            ok($ok, $msg);
+
+            my $enabled_role = RT::CustomRole->new(RT->SystemUser);
+            ($ok, $msg) = $enabled_role->Create(
+                Name => 'Enabled Role',
+            );
+            ok($ok, $msg);
+
+            my $disabled_role = RT::CustomRole->new(RT->SystemUser);
+            ($ok, $msg) = $disabled_role->Create(
+                Name => 'Disabled Role',
+            );
+            ok($ok, $msg);
+
+            for my $object ($enabled_cf, $disabled_cf,
+                            $enabled_scrip, $disabled_scrip,
+                            $enabled_class, $disabled_class,
+                            $enabled_role, $disabled_role) {
+
+                # slightly inconsistent API
+                my ($queue_a, $queue_b) = ($disabled_queue, $general);
+                ($queue_a, $queue_b) = ($queue_a->Id, $queue_b->Id)
+                    if $object->isa('RT::Scrip')
+                    || $object->isa('RT::CustomRole');
+
+                ($ok, $msg) = $object->AddToObject($queue_a);
+                ok($ok, $msg);
+
+                ($ok, $msg) = $object->AddToObject($queue_b);
+                ok($ok, $msg);
+            }
+
+            for my $object ($disabled_queue,
+                            $disabled_cf,
+                            $disabled_scrip,
+                            $disabled_class,
+                            $disabled_role) {
+                ($ok, $msg) = $object->SetDisabled(1);
+                ok($ok, $msg);
+            }
+        },
+        present => sub {
+            my $from_initialdata = shift;
+
+            my $disabled_queue = RT::Queue->new(RT->SystemUser);
+            $disabled_queue->Load('Disabled Queue');
+
+            my $enabled_cf = RT::CustomField->new(RT->SystemUser);
+            $enabled_cf->Load('Enabled CF');
+            ok($enabled_cf->Id, 'loaded Enabled CF');
+            is($enabled_cf->Name, 'Enabled CF', 'Enabled CF Name');
+            ok($enabled_cf->IsAdded($general->Id), 'Enabled CF added to General');
+
+            my $disabled_cf = RT::CustomField->new(RT->SystemUser);
+            $disabled_cf->Load('Disabled CF');
+
+            my $enabled_scrip = RT::Scrip->new(RT->SystemUser);
+            $enabled_scrip->LoadByCols(Description => 'Enabled Scrip');
+            ok($enabled_scrip->Id, 'loaded Enabled Scrip');
+            is($enabled_scrip->Description, 'Enabled Scrip', 'Enabled Scrip Name');
+            ok($enabled_scrip->IsAdded($general->Id), 'Enabled Scrip added to General');
+            my $disabled_scrip = RT::Scrip->new(RT->SystemUser);
+            $disabled_scrip->LoadByCols(Description => 'Disabled Scrip');
+
+            my $enabled_class = RT::Class->new(RT->SystemUser);
+            $enabled_class->Load('Enabled Class');
+            ok($enabled_class->Id, 'loaded Enabled Class');
+            is($enabled_class->Name, 'Enabled Class', 'Enabled Class Name');
+            ok($enabled_class->IsApplied($general->Id), 'Enabled Class added to General');
+
+            my $disabled_class = RT::Class->new(RT->SystemUser);
+            $disabled_class->Load('Disabled Class');
+
+            my $enabled_role = RT::CustomRole->new(RT->SystemUser);
+            $enabled_role->Load('Enabled Role');
+            ok($enabled_role->Id, 'loaded Enabled Role');
+            is($enabled_role->Name, 'Enabled Role', 'Enabled Role Name');
+            ok($enabled_role->IsAdded($general->Id), 'Enabled Role added to General');
+
+            my $disabled_role = RT::CustomRole->new(RT->SystemUser);
+            $disabled_role->Load('Disabled Role');
+
+            for my $object ($disabled_queue, $disabled_cf,
+                            $disabled_scrip, $disabled_class,
+                            $disabled_role) {
+                if ($from_initialdata) {
+                    ok(!$object->Id, "disabled " . ref($object) . " excluded");
+                }
+                else {
+                    ok($object->Disabled, "disabled " . ref($object));
+                }
+            }
+        },
+    },
+
+    {
         name => 'Unapplied Objects',
         create => sub {
             my $scrip = RT::Scrip->new(RT->SystemUser);
