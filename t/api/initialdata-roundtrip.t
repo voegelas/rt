@@ -470,8 +470,14 @@ my @tests = (
     {
         name => 'Disabled many-to-many relationships',
         create => sub {
+            my $enabled_queue = RT::Queue->new(RT->SystemUser);
+            my ($ok, $msg) = $enabled_queue->Create(
+                Name => 'Enabled Queue',
+            );
+            ok($ok, $msg);
+
             my $disabled_queue = RT::Queue->new(RT->SystemUser);
-            my ($ok, $msg) = $disabled_queue->Create(
+            ($ok, $msg) = $disabled_queue->Create(
                 Name => 'Disabled Queue',
             );
             ok($ok, $msg);
@@ -480,7 +486,7 @@ my @tests = (
             ($ok, $msg) = $enabled_cf->Create(
                 Name => 'Enabled CF',
                 Type => 'FreeformSingle',
-                LookupType => RT::Ticket->CustomFieldLookupType,
+                LookupType => RT::Queue->CustomFieldLookupType,
             );
             ok($ok, $msg);
 
@@ -488,7 +494,7 @@ my @tests = (
             ($ok, $msg) = $disabled_cf->Create(
                 Name => 'Disabled CF',
                 Type => 'FreeformSingle',
-                LookupType => RT::Ticket->CustomFieldLookupType,
+                LookupType => RT::Queue->CustomFieldLookupType,
             );
             ok($ok, $msg);
 
@@ -568,7 +574,7 @@ my @tests = (
                             $enabled_role, $disabled_role) {
 
                 # slightly inconsistent API
-                my ($queue_a, $queue_b) = ($disabled_queue, $general);
+                my ($queue_a, $queue_b) = ($disabled_queue, $enabled_queue);
                 ($queue_a, $queue_b) = ($queue_a->Id, $queue_b->Id)
                     if $object->isa('RT::Scrip')
                     || $object->isa('RT::CustomRole');
@@ -585,11 +591,18 @@ my @tests = (
                 ($ok, $msg) = $principal->PrincipalObj->GrantRight(Object => RT->System, Right => 'SeeQueue');
                 ok($ok, $msg);
 
-                for my $queue ($general, $disabled_queue) {
+                for my $queue ($enabled_queue, $disabled_queue) {
                     ($ok, $msg) = $principal->PrincipalObj->GrantRight(Object => $queue, Right => 'ShowTicket');
                     ok($ok, $msg);
 
                     ($ok, $msg) = $queue->AddWatcher(Type => 'AdminCc', PrincipalId => $principal->PrincipalId);
+                    ok($ok, $msg);
+                }
+            }
+
+            for my $cf ($enabled_cf, $disabled_cf) {
+                for my $queue ($enabled_queue, $disabled_queue) {
+                    ($ok, $msg) = $queue->AddCustomFieldValue(Field => $cf->Id, Value => $cf->Name);
                     ok($ok, $msg);
                 }
             }
@@ -605,6 +618,11 @@ my @tests = (
         present => sub {
             my $from_initialdata = shift;
 
+            my $enabled_queue = RT::Queue->new(RT->SystemUser);
+            $enabled_queue->Load('Enabled Queue');
+            ok($enabled_queue->Id, 'loaded Enabled queue');
+            is($enabled_queue->Name, 'Enabled Queue', 'Enabled Queue Name');
+
             my $disabled_queue = RT::Queue->new(RT->SystemUser);
             $disabled_queue->Load('Disabled Queue');
 
@@ -612,7 +630,9 @@ my @tests = (
             $enabled_cf->Load('Enabled CF');
             ok($enabled_cf->Id, 'loaded Enabled CF');
             is($enabled_cf->Name, 'Enabled CF', 'Enabled CF Name');
-            ok($enabled_cf->IsAdded($general->Id), 'Enabled CF added to General');
+            ok($enabled_cf->IsAdded($enabled_queue->Id), 'Enabled CF added to General');
+
+            is($enabled_queue->FirstCustomFieldValue('Enabled CF'), 'Enabled CF', 'OCFV');
 
             my $disabled_cf = RT::CustomField->new(RT->SystemUser);
             $disabled_cf->Load('Disabled CF');
@@ -621,7 +641,7 @@ my @tests = (
             $enabled_scrip->LoadByCols(Description => 'Enabled Scrip');
             ok($enabled_scrip->Id, 'loaded Enabled Scrip');
             is($enabled_scrip->Description, 'Enabled Scrip', 'Enabled Scrip Name');
-            ok($enabled_scrip->IsAdded($general->Id), 'Enabled Scrip added to General');
+            ok($enabled_scrip->IsAdded($enabled_queue->Id), 'Enabled Scrip added to General');
             my $disabled_scrip = RT::Scrip->new(RT->SystemUser);
             $disabled_scrip->LoadByCols(Description => 'Disabled Scrip');
 
@@ -629,7 +649,7 @@ my @tests = (
             $enabled_class->Load('Enabled Class');
             ok($enabled_class->Id, 'loaded Enabled Class');
             is($enabled_class->Name, 'Enabled Class', 'Enabled Class Name');
-            ok($enabled_class->IsApplied($general->Id), 'Enabled Class added to General');
+            ok($enabled_class->IsApplied($enabled_queue->Id), 'Enabled Class added to General');
 
             my $disabled_class = RT::Class->new(RT->SystemUser);
             $disabled_class->Load('Disabled Class');
@@ -638,7 +658,7 @@ my @tests = (
             $enabled_role->Load('Enabled Role');
             ok($enabled_role->Id, 'loaded Enabled Role');
             is($enabled_role->Name, 'Enabled Role', 'Enabled Role Name');
-            ok($enabled_role->IsAdded($general->Id), 'Enabled Role added to General');
+            ok($enabled_role->IsAdded($enabled_queue->Id), 'Enabled Role added to General');
 
             my $disabled_role = RT::CustomRole->new(RT->SystemUser);
             $disabled_role->Load('Disabled Role');
@@ -647,9 +667,9 @@ my @tests = (
             $enabled_group->LoadUserDefinedGroup('Enabled Group');
             ok($enabled_group->Id, 'loaded Enabled Group');
             is($enabled_group->Name, 'Enabled Group', 'Enabled Group Name');
-            ok($enabled_group->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'Enabled Group has queue right');
+            ok($enabled_group->PrincipalObj->HasRight(Object => $enabled_queue, Right => 'ShowTicket'), 'Enabled Group has queue right');
             ok($enabled_group->PrincipalObj->HasRight(Object => RT->System, Right => 'SeeQueue'), 'Enabled Group has global right');
-            ok($general->AdminCc->HasMember($enabled_group->PrincipalObj), 'Enabled Group still queue watcher');
+            ok($enabled_queue->AdminCc->HasMember($enabled_group->PrincipalObj), 'Enabled Group still queue watcher');
 
             my $disabled_group = RT::Group->new(RT->SystemUser);
             $disabled_group->LoadUserDefinedGroup('Disabled Group');
@@ -658,9 +678,9 @@ my @tests = (
             $enabled_user->Load('Enabled User');
             ok($enabled_user->Id, 'loaded Enabled User');
             is($enabled_user->Name, 'Enabled User', 'Enabled User Name');
-            ok($enabled_user->PrincipalObj->HasRight(Object => $general, Right => 'ShowTicket'), 'Enabled User has queue right');
+            ok($enabled_user->PrincipalObj->HasRight(Object => $enabled_queue, Right => 'ShowTicket'), 'Enabled User has queue right');
             ok($enabled_user->PrincipalObj->HasRight(Object => RT->System, Right => 'SeeQueue'), 'Enabled User has global right');
-            ok($general->AdminCc->HasMember($enabled_user->PrincipalObj), 'Enabled User still queue watcher');
+            ok($enabled_queue->AdminCc->HasMember($enabled_user->PrincipalObj), 'Enabled User still queue watcher');
 
             my $disabled_user = RT::User->new(RT->SystemUser);
             $disabled_user->Load('Disabled User');
