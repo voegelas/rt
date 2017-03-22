@@ -51,6 +51,10 @@ my @tests = (
             ($ok, $msg) = $user->Create(Name => 'User');
             ok($ok, $msg);
 
+            my $unprivileged = RT::User->new(RT->SystemUser);
+            ($ok, $msg) = $unprivileged->Create(Name => 'Unprivileged');
+            ok($ok, $msg);
+
             ($ok, $msg) = $outer->AddMember($inner->PrincipalId);
             ok($ok, $msg);
 
@@ -67,6 +71,9 @@ my @tests = (
             ok($ok, $msg);
 
             ($ok, $msg) = $user->PrincipalObj->GrantRight(Object => $general, Right => 'OwnTicket');
+            ok($ok, $msg);
+
+            ($ok, $msg) = $unprivileged->PrincipalObj->GrantRight(Object => RT->System, Right => 'ModifyTicket');
             ok($ok, $msg);
         },
         present => sub {
@@ -89,6 +96,11 @@ my @tests = (
             $user->Load('User');
             ok($user->Id, 'Loaded user');
             is($user->Name, 'User', 'User name');
+
+            my $unprivileged = RT::User->new(RT->SystemUser);
+            $unprivileged->Load('Unprivileged');
+            ok($unprivileged->Id, 'Loaded Unprivileged');
+            is($unprivileged->Name, 'Unprivileged', 'Unprivileged name');
 
             ok($outer->HasMember($inner->PrincipalId), 'outer hasmember inner');
             ok($inner->HasMember($user->PrincipalId), 'inner hasmember user');
@@ -121,6 +133,8 @@ my @tests = (
             ok(!$inner->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'inner OwnTicket right');
             ok($user->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'inner OwnTicket right');
             ok(!$unrelated->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'unrelated OwnTicket right');
+
+            ok($unprivileged->PrincipalObj->HasRight(Object => RT->System, Right => 'ModifyTicket'), 'unprivileged ModifyTicket right');
         },
     },
 
