@@ -75,6 +75,10 @@ my @tests = (
 
             ($ok, $msg) = $unprivileged->PrincipalObj->GrantRight(Object => RT->System, Right => 'ModifyTicket');
             ok($ok, $msg);
+
+            ($ok, $msg) = $inner->PrincipalObj->GrantRight(Object => $inner, Right => 'SeeGroup');
+            ok($ok, $msg);
+
         },
         present => sub {
             my $outer = RT::Group->new(RT->SystemUser);
@@ -135,6 +139,12 @@ my @tests = (
             ok(!$unrelated->PrincipalObj->HasRight(Object => $general, Right => 'OwnTicket'), 'unrelated OwnTicket right');
 
             ok($unprivileged->PrincipalObj->HasRight(Object => RT->System, Right => 'ModifyTicket'), 'unprivileged ModifyTicket right');
+
+            ok(!$general->AdminCc->PrincipalObj->HasRight(Object => $inner, Right => 'SeeGroup'), 'AdminCc SeeGroup right');
+            ok(!$outer->PrincipalObj->HasRight(Object => $inner, Right => 'SeeGroup'), 'outer SeeGroup right');
+            ok($inner->PrincipalObj->HasRight(Object => $inner, Right => 'SeeGroup'), 'inner SeeGroup right');
+            ok($user->PrincipalObj->HasRight(Object => $inner, Right => 'SeeGroup'), 'user SeeGroup right');
+            ok(!$unrelated->PrincipalObj->HasRight(Object => $inner, Right => 'SeeGroup'), 'unrelated SeeGroup right');
         },
     },
 
