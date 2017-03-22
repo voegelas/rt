@@ -1,6 +1,7 @@
 use utf8;
 use strict;
 use warnings;
+use JSON;
 
 use RT::Test tests => undef, config => << 'CONFIG';
 Plugin('RT::Extension::Initialdata::JSON');
@@ -705,43 +706,37 @@ for my $test (@tests) {
         goto &$warn;
     };
 
-    my $name    = delete $test->{name};
-    my $create  = delete $test->{create};
-    my $absent  = delete $test->{absent};
-    my $present = delete $test->{present};
-    my $raw     = delete $test->{raw};
+    my $name        = delete $test->{name};
+    my $create      = delete $test->{create};
+    my $absent      = delete $test->{absent};
+    my $present     = delete $test->{present};
+    my $raw         = delete $test->{raw};
+    my $export_args = delete $test->{export_args};
     fail("Unexpected keys for test #$id ($name): " . join(', ', sort keys %$test)) if keys %$test;
 
     subtest "$name (ordinary creation)" => sub {
         autorollback(sub {
-            $absent->() if $absent;
+            $absent->(0) if $absent;
             $create->();
-            $present->() if $present;
-            export_initialdata($directory);
+            $present->(0) if $present;
+            export_initialdata($directory, %{ $export_args || {} });
         });
     };
 
     if ($raw) {
         subtest "$name (testing initialdata)" => sub {
             my $file = File::Spec->catfile($directory, "initialdata.json");
-            my $content = do {
-                local $/;
-                open (my $f, '<:encoding(UTF-8)', $file)
-                    or die "Cannot open initialdata file '$file' for read: $@";
-                <$f>;
-            };
-            require JSON;
+            my $content = slurp($file);
             my $json = JSON->new->decode($content);
-
             $raw->($json, $content);
         };
     }
 
     subtest "$name (from export-$id/initialdata.json)" => sub {
         autorollback(sub {
-            $absent->() if $absent;
+            $absent->(1) if $absent;
             import_initialdata($directory);
-            $present->() if $present;
+            $present->(1) if $present;
         });
     };
 }
@@ -769,6 +764,7 @@ sub autorollback {
 
 sub export_initialdata {
     my $directory = shift;
+    my %args      = @_;
     local @RT::Record::ISA = qw( DBIx::SearchBuilder::Record RT::Base );
 
     use RT::Migrate::Serializer::JSON;
@@ -781,6 +777,8 @@ sub export_initialdata {
         FollowTransactions => 0,
         FollowTickets      => 0,
         FollowAssets       => 0,
+        FollowDisabled     => 0,
+        %args,
     );
 
     $migrator->Export;
@@ -795,5 +793,13 @@ sub import_initialdata {
     my ($rv, $msg) = RT->DatabaseHandle->InsertData( $initialdata, undef, disconnect_after => 0 );
     ok($rv, "Inserted test data from $initialdata")
         or diag "Error: $msg";
+}
+
+sub slurp {
+    my $file = shift;
+    local $/;
+    open (my $f, '<:encoding(UTF-8)', $file)
+        or die "Cannot open initialdata file '$file' for read: $@";
+    return scalar <$f>;
 }
 
