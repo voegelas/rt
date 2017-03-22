@@ -872,6 +872,16 @@ my @tests = (
                 Type => "Simple",
             );
             ok($ok, $msg);
+
+            my $standalone = RT::Template->new(RT->SystemUser);
+            ($ok, $msg) = $standalone->Create(
+                Name => 'Standalone test',
+                Queue => $general->Id,
+                Description => 'no global version',
+                Content => "this was broken!",
+                Type => "Perl",
+            );
+            ok($ok, $msg);
         },
         present => sub {
             my $global = RT::Template->new(RT->SystemUser);
@@ -891,6 +901,15 @@ my @tests = (
             is($queue->Description, 'override for Swedes', 'Description');
             is($queue->Content, 'Hello Hallå', 'Content');
             is($queue->Type, 'Simple', 'Type');
+
+            my $standalone = RT::Template->new(RT->SystemUser);
+            $standalone->LoadQueueTemplate(Name => 'Standalone test', Queue => $general->Id);
+            ok($standalone->Id, 'loaded template');
+            is($standalone->Name, 'Standalone test', 'Name');
+            is($standalone->Queue, $general->Id, 'Queue');
+            is($standalone->Description, 'no global version', 'Description');
+            is($standalone->Content, 'this was broken!', 'Content');
+            is($standalone->Type, 'Perl', 'Type');
         },
     },
     {
