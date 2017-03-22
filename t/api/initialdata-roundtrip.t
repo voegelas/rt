@@ -327,7 +327,8 @@ my @tests = (
     },
 
     {
-        name => 'Scrips',
+        name => 'Scrips including Disabled',
+        export_args => { FollowDisabled => 1 },
         create => sub {
             my $bugs = RT::Queue->new(RT->SystemUser);
             my ($ok, $msg) = $bugs->Create(Name => 'Bugs');
@@ -349,7 +350,8 @@ my @tests = (
                 CustomCommitCode => 'return "commit"',
             );
             ok($ok, $msg);
-            $disabled->SetDisabled(1);
+            ($ok, $msg) = $disabled->SetDisabled(1);
+            ok($ok, $msg);
 
             my $stages = RT::Scrip->new(RT->SystemUser);
             ($ok, $msg) = $stages->Create(
@@ -419,6 +421,49 @@ my @tests = (
             is($features_objectscrip->SortOrder, 99, 'SortOrder');
 
             ok(!$stages->IsAdded($general->Id), 'not added to General');
+        },
+    },
+
+    {
+        name => 'No disabled scrips',
+        create => sub {
+            my $disabled = RT::Scrip->new(RT->SystemUser);
+            my ($ok, $msg) = $disabled->Create(
+                Description => 'Disabled Scrip',
+                Template => 'Transaction',
+                ScripCondition => 'On Create',
+                ScripAction => 'Notify Owner',
+            );
+            ok($ok, $msg);
+            ($ok, $msg) = $disabled->SetDisabled(1);
+            ok($ok, $msg);
+
+            my $enabled = RT::Scrip->new(RT->SystemUser);
+            ($ok, $msg) = $enabled->Create(
+                Description => 'Enabled Scrip',
+                Template => 'Transaction',
+                ScripCondition => 'On Create',
+                ScripAction => 'Notify Owner',
+            );
+            ok($ok, $msg);
+        },
+        present => sub {
+            my $from_initialdata = shift;
+
+            my $disabled = RT::Scrip->new(RT->SystemUser);
+            $disabled->LoadByCols(Description => 'Disabled Scrip');
+
+            if ($from_initialdata) {
+                ok(!$disabled->Id, 'Disabled scrip absent in initialdata');
+            }
+            else {
+                ok($disabled->Id, 'Disabled scrip present because of the original creation');
+                ok($disabled->Disabled, 'Disabled scrip disabled');
+            }
+
+            my $enabled = RT::Scrip->new(RT->SystemUser);
+            $enabled->LoadByCols(Description => 'Enabled Scrip');
+            ok($enabled->Id, 'Enabled scrip present');
         },
     },
 
