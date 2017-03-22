@@ -145,7 +145,6 @@ sub PushBasics {
     # we want to include all CFs, scrips, etc, not just the reachable ones
     $self->PushCollections(qw(CustomFields CustomRoles));
     $self->PushCollections(qw(Scrips)) if $self->{FollowScrips};
-    $self->PushCollections(qw(Assets)) if $self->{FollowAssets};
 }
 
 sub JSON {
