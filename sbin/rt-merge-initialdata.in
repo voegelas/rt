@@ -224,7 +224,8 @@ sub find_differences {
 
 sub is_deeply_equal {
     my ($left, $right) = @_;
-    return $JSON->encode($left) eq $JSON->encode($right);
+    # use [] to avoid nonref issues without changing $JSON itself
+    return $JSON->encode([$left]) eq $JSON->encode([$right]);
 }
 
 sub slurp_json {
