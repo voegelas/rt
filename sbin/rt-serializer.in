@@ -139,8 +139,9 @@ $args{Clone}         = $OPT{clone}       if $OPT{clone};
 $args{Incremental}   = $OPT{incremental} if $OPT{incremental};
 $args{Sync}          = $OPT{sync}        if $OPT{sync};
 
-$args{GC}   = defined $OPT{gc}   ? $OPT{gc}   : 5000;
-$args{Page} = defined $OPT{page} ? $OPT{page} : 100;
+$args{GC}      = defined $OPT{gc}    ? $OPT{gc}     : 5000;
+$args{Page}    = defined $OPT{page}  ? $OPT{page}   : 100;
+$args{Verbose} = defined $OPT{quiet} ? !$OPT{quiet} : 1;
 
 if (($OPT{clone} or $OPT{incremental})
         and grep { /^(users|groups|deleted|disabled|scrips|tickets|transactions|acls|assets)$/ } keys %OPT) {
@@ -163,7 +164,6 @@ if (-t STDOUT and not $OPT{verbose} and not $OPT{quiet}) {
     };
     $args{Verbose}  = 0;
 }
-$args{Verbose} = 0 if $OPT{quiet};
 
 
 my $walker_class = "RT::Migrate::Serializer::" . ($OPT{format} || 'File');
@@ -173,19 +173,21 @@ $walker_class->require
 $walker = $walker_class->new( %args );
 
 my $log = RT::Migrate::setup_logging( $walker->{Directory} => 'serializer.log' );
-print "Logging warnings and errors to $log\n" if $log;
+print "Logging warnings and errors to $log\n" if $log && $args{Verbose};
 
-print "Beginning database serialization...";
+print "Beginning database serialization..." if $args{Verbose};
 my %counts = $walker->Export;
 
-my @files = $walker->Files;
-print "Wrote @{[scalar @files]} files:\n";
-print "    $_\n" for @files;
-print "\n";
+if ($args{Verbose}) {
+    my @files = $walker->Files;
+    print "Wrote @{[scalar @files]} files:\n";
+    print "    $_\n" for @files;
+    print "\n";
 
-print "Total object counts:\n";
-for (sort {$counts{$b} <=> $counts{$a}} keys %counts) {
-    printf "%8d %s\n", $counts{$_}, $_;
+    print "Total object counts:\n";
+    for (sort {$counts{$b} <=> $counts{$a}} keys %counts) {
+        printf "%8d %s\n", $counts{$_}, $_;
+    }
 }
 
 if ($log and -s $log) {
