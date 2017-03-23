@@ -102,6 +102,8 @@ my %class_type = (
     Members => 'GroupMembers',
 );
 
+my %new_for_insertdata;
+
 for my $type (@record_types) {
     my ($new_records, $updated_records, $deleted_records) = find_differences(
         $base_records->{$type},
@@ -111,6 +113,8 @@ for my $type (@record_types) {
 
     my $collection_class = "RT::" . ($class_type{$type} || $type);
     my $record_class = $collection_class->RecordClass;
+
+    $new_for_insertdata{$type} = $new_records;
 
     for (@$updated_records) {
         my ($base, $edited) = @$_;
@@ -156,10 +160,6 @@ for my $type (@record_types) {
         }
     }
 
-    for my $new (@$new_records) {
-        my $record = $record_class->new(RT->SystemUser);
-    }
-
     for my $deleted (@$deleted_records) {
         my $id = $deleted->{id};
         my $record = $record_class->new(RT->SystemUser);
@@ -184,6 +184,9 @@ for my $type (@record_types) {
         }
     }
 }
+
+my $new_json = $JSON->encode(\%new_for_insertdata);
+$RT::Handle->InsertData(\$new_json, undef, disconnect_after => 0);
 
 sub find_differences {
     my $base_records = shift;
