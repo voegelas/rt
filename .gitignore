@@ -42,6 +42,7 @@
 /sbin/rt-validator
 /sbin/rt-validate-aliases
 /sbin/rt-serializer
+/sbin/rt-merge-initialdata
 /sbin/rt-importer
 /sbin/rt-ldapimport
 /sbin/standalone_httpd

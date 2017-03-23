@@ -484,6 +484,7 @@ AC_CONFIG_FILES([
                  sbin/rt-setup-fulltext-index
                  sbin/rt-fulltext-indexer
                  sbin/rt-serializer
+                 sbin/rt-merge-initialdata
                  sbin/rt-importer
                  bin/rt-crontool
                  bin/rt-mailgate
