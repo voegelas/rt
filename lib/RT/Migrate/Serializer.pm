@@ -75,6 +75,7 @@ sub Init {
 
         Clone       => 0,
         Incremental => 0,
+        Sync        => 0,
 
         Verbose => 1,
         @_,
@@ -95,6 +96,7 @@ sub Init {
                   FollowACL
                   Clone
                   Incremental
+                  Sync
               /;
 
     $self->{Clone} = 1 if $self->{Incremental};

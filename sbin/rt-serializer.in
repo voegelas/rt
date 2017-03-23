@@ -111,6 +111,7 @@ GetOptions(
 
     "clone",
     "incremental",
+    "sync",
 
     "gc=i",
     "page=i",
@@ -136,6 +137,7 @@ $args{FollowAssets}       = $OPT{assets}       if defined $OPT{assets};
 
 $args{Clone}         = $OPT{clone}       if $OPT{clone};
 $args{Incremental}   = $OPT{incremental} if $OPT{incremental};
+$args{Sync}          = $OPT{sync}        if $OPT{sync};
 
 $args{GC}   = defined $OPT{gc}   ? $OPT{gc}   : 5000;
 $args{Page} = defined $OPT{page} ? $OPT{page} : 100;
@@ -371,6 +373,12 @@ Will generate an incremenal serialized dataset using the data stored in
 your IncrementalRecords database table.  This assumes that you have created
 that table and run RT using the Record_Local.pm shim as documented in
 C<docs/incremental-export/>.
+
+=item B<--sync>
+
+When exporting an initialdata, record ids are ordinarily excluded. Pass
+C<--sync> to include record ids if you intend to use this for sync
+rather than creating a generic initialdata.
 
 =item B<--gc> I<n>
 
