@@ -139,10 +139,35 @@ for my $type (@record_types) {
             if (!ref($base_value) && !ref($edited_value)) {
                 my $method = "Set$column";
                 if ($record->can($method) || $record->_Accessible($column, 'write')) {
-                    # skip if it was already updated outside initialdata
-                    next if ($record->$method//"") eq $edited_value;
+                    my $current_value = $record->$column // "";
 
-                    my ($ok, $msg) = $record->$method($edited_value);
+                    # skip if it was already updated outside initialdata
+                    next if $current_value eq $edited_value;
+
+                    my $new_value = $edited_value;
+
+                    if ($base_value ne $current_value) {
+                        my $decision = decide_merge(
+                            base_record    => $base,
+                            edited_record  => $edited,
+                            current_record => $record,
+                            column         => $column,
+                            base_value     => $base_value,
+                            edited_value   => $edited_value,
+                            current_value  => $current_value,
+                        );
+                        if ($decision eq 'base') {
+                            $new_value = $base_value;
+                        }
+                        elsif ($decision eq 'edited') {
+                            # continue
+                        }
+                        elsif ($decision eq 'current') {
+                            next;
+                        }
+                    }
+
+                    my ($ok, $msg) = $record->$method($new_value);
                     if ($ok) {
                         RT->Logger->debug("Updated $record_class #$id $column: $msg");
                     }
@@ -241,3 +266,53 @@ sub slurp_json {
         or die "Cannot open initialdata file '$file' for read: $@";
     return $JSON->decode(scalar <$f>);
 }
+
+sub decide_merge {
+    my %args = (
+        base_record    => undef,
+        edited_record  => undef,
+        current_record => undef,
+        column         => undef,
+        base_value     => undef,
+        edited_value   => undef,
+        current_value  => undef,
+        @_,
+    );
+
+    my $record = $args{current_record};
+    my $id = $record->id;
+    my $type = ref($record);
+    $type =~ s/^RT:://;
+
+    local $| = 1;
+    while (1) {
+        print "\n";
+        print "Conflict resolution required for $type #$id $args{column}:\n";
+        print "    Base value:     $args{base_value}\n";
+        print "    Edited value:   $args{edited_value}\n";
+        print "    Database value: $args{current_value}\n";
+        print "Would you like to (q)uit, (s)ee more context, or set value to (b)ase, (e)dited, or (d)atabase? ";
+
+        my $answer = (scalar <STDIN>) // "";
+        print "\n";
+
+        exit 1 if $answer =~ /^q/i;
+        return "base" if $answer =~ /^b/i;
+        return "edited" if $answer =~ /^e/i;
+        return "current" if $answer =~ /^d/i;
+
+        if ($answer =~ /^s/i) {
+            my %values = %{ $record->{values} };
+            delete $values{$_} for grep { ($values{$_}//"") eq ""} keys %values;
+            for ('base', 'edited', ['current', \%values]) {
+                my ($key, $record) = ref($_)
+                                   ? @$_
+                                   : ($_, $args{$_ . '_record'});
+                print "\u$key:\n";
+                print "    $_\n"
+                    for split /\n/, JSON->new->pretty->canonical->encode($record);
+            }
+        }
+    }
+}
+
