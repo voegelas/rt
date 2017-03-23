@@ -81,8 +81,6 @@ sub Init {
         @_,
     );
 
-    $self->{Verbose} = delete $args{Verbose};
-
     $self->{$_} = delete $args{$_}
         for qw/
                   AllUsers
@@ -97,6 +95,7 @@ sub Init {
                   Clone
                   Incremental
                   Sync
+                  Verbose
               /;
 
     $self->{Clone} = 1 if $self->{Incremental};
