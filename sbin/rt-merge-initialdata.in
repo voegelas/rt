@@ -130,9 +130,9 @@ for my $type (@record_types) {
                 $_ = !!$_ if JSON::is_bool($_)
             }
 
-            if (!ref($base_value) && !ref($edited_value)) {
-                next if $base_value eq $edited_value;
+            next if is_deeply_equal($base_value, $edited_value);
 
+            if (!ref($base_value) && !ref($edited_value)) {
                 my $method = "Set$column";
                 if ($record->can($method) || $record->_Accessible($column, 'write')) {
                     my ($ok, $msg) = $record->$method($edited_value);
@@ -210,7 +210,7 @@ sub find_differences {
         }
         else {
             my $base_record = delete $base_by_id{$id};
-            next if $JSON->encode($base_record) eq $JSON->encode($edited_record);
+            next if is_deeply_equal($base_record, $edited_record);
             push @updated, [ $base_record => $edited_record ];
         }
     }
@@ -220,6 +220,11 @@ sub find_differences {
     }
 
     return (\@new, \@updated, \@deleted);
+}
+
+sub is_deeply_equal {
+    my ($left, $right) = @_;
+    return $JSON->encode($left) eq $JSON->encode($right);
 }
 
 sub slurp_json {
