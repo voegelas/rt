@@ -46,6 +46,7 @@
 # those contributions and any derivatives thereof.
 #
 # END BPS TAGGED BLOCK }}}
+use 5.010;
 use strict;
 use warnings;
 
@@ -78,6 +79,7 @@ use RT;
 RT::LoadConfig();
 RT::Init();
 
+use List::MoreUtils 'uniq';
 use JSON ();
 my $JSON = JSON->new->canonical;
 
@@ -96,6 +98,10 @@ my @record_types = qw/Groups Users Members ACL Queues Classes
                       CustomFields CustomRoles Scrips
                       Catalogs Assets Articles/;
 
+my %class_type = (
+    Members => 'GroupMembers',
+);
+
 for my $type (@record_types) {
     my ($new_records, $updated_records, $deleted_records) = find_differences(
         $base_records->{$type},
@@ -103,8 +109,49 @@ for my $type (@record_types) {
         $type,
     );
 
-    my $collection_class = "RT::$type";
+    my $collection_class = "RT::" . ($class_type{$type} || $type);
     my $record_class = $collection_class->RecordClass;
+
+    for (@$updated_records) {
+        my ($base, $edited) = @$_;
+        my $id = $base->{id};
+        my $record = $record_class->new(RT->SystemUser);
+        $record->Load($id);
+        if (!$record->Id) {
+            RT->Logger->error("Unable to load $record_class $id for updating; skipping");
+            next;
+        }
+
+        for my $column (uniq sort keys(%$base), keys(%$edited)) {
+            my $base_value = $base->{$column} // "";
+            my $edited_value = $edited->{$column} // "";
+
+            for ($base_value, $edited_value) {
+                $_ = !!$_ if JSON::is_bool($_)
+            }
+
+            if (!ref($base_value) && !ref($edited_value)) {
+                next if $base_value eq $edited_value;
+
+                my $method = "Set$column";
+                if ($record->can($method) || $record->_Accessible($column, 'write')) {
+                    my ($ok, $msg) = $record->$method($edited_value);
+                    if ($ok) {
+                        RT->Logger->debug("Updated $record_class #$id $column: $msg");
+                    }
+                    else {
+                        RT->Logger->error("Unable to update $record_class #$id $column: $msg");
+                    }
+                }
+                else {
+                    die "Unable to handle updating $record_class $column (no method)";
+                }
+            }
+            else {
+                die "Unable to handle updating $record_class $column (composite value)";
+            }
+        }
+    }
 
     for my $new (@$new_records) {
         my $record = $record_class->new(RT->SystemUser);
@@ -127,17 +174,11 @@ for my $type (@record_types) {
         }
 
         if ($ok) {
-            RT->Logger->debug("Deleted $record_class $id: $msg");
+            RT->Logger->debug("Deleted $record_class #$id: $msg");
         }
         else {
-            RT->Logger->error("Unable to delete $record_class $id: $msg");
+            RT->Logger->error("Unable to delete $record_class #$id: $msg");
         }
-    }
-
-    for (@$updated_records) {
-        my ($base, $edited) = @_;
-        my $record = $record_class->new(RT->SystemUser);
-        $record->Load($base->{id});
     }
 }
 
