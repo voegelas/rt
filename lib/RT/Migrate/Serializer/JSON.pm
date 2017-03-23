@@ -611,6 +611,8 @@ sub WriteFile {
         }
     }
 
+    $output{ExportOptions} = $self->{ExportOptions} if $self->{Sync};
+
     print { $self->{Filehandle} } $self->JSON->encode(\%output);
 }
 

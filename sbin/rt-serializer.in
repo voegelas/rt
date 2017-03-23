@@ -378,7 +378,8 @@ C<docs/incremental-export/>.
 
 When exporting an initialdata, record ids are ordinarily excluded. Pass
 C<--sync> to include record ids if you intend to use this for sync
-rather than creating a generic initialdata.
+rather than creating a generic initialdata. This also includes the export
+options in the initialdata for later reuse.
 
 =item B<--gc> I<n>
 

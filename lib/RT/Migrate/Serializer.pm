@@ -81,7 +81,7 @@ sub Init {
         @_,
     );
 
-    $self->{$_} = delete $args{$_}
+    $self->{$_} = $self->{ExportOptions}{$_} = delete $args{$_}
         for qw/
                   AllUsers
                   AllGroups
