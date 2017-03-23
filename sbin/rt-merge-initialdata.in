@@ -135,6 +135,9 @@ for my $type (@record_types) {
             if (!ref($base_value) && !ref($edited_value)) {
                 my $method = "Set$column";
                 if ($record->can($method) || $record->_Accessible($column, 'write')) {
+                    # skip if it was already updated outside initialdata
+                    next if ($record->$method//"") eq $edited_value;
+
                     my ($ok, $msg) = $record->$method($edited_value);
                     if ($ok) {
                         RT->Logger->debug("Updated $record_class #$id $column: $msg");
