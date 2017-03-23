@@ -111,8 +111,27 @@ for my $type (@record_types) {
     }
 
     for my $deleted (@$deleted_records) {
+        my $id = $deleted->{id};
         my $record = $record_class->new(RT->SystemUser);
-        $record->Load($deleted->{id});
+        $record->Load($id);
+
+        my ($ok, $msg);
+        if ($record->can('SetDisabled') || $record->_Accessible('Disabled', 'write')) {
+            ($ok, $msg) = $record->SetDisabled(1);
+        }
+        elsif ($record->can('Delete')) {
+            ($ok, $msg) = $record->Delete;
+        }
+        else {
+            die "No method to delete $record_class #$id";
+        }
+
+        if ($ok) {
+            RT->Logger->debug("Deleted $record_class $id: $msg");
+        }
+        else {
+            RT->Logger->error("Unable to delete $record_class $id: $msg");
+        }
     }
 
     for (@$updated_records) {
