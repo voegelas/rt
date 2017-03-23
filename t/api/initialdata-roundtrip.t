@@ -1018,7 +1018,6 @@ for my $test (@tests) {
             qr/^.* already has the right .* on .*$/,
             qr/^Invalid value for Name$/,
             qr/^Queue already exists$/,
-            qr/^Use of uninitialized value in/,
             qr/^Invalid Name \(names must be unique and may not be all digits\)$/,
         );
 
