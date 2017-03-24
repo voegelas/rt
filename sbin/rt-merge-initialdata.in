@@ -149,87 +149,104 @@ sub update_record {
     }
 }
 
+sub _object_merger {
+   my %args = @_;
+   my $primary = $args{current_record};
+   my $primary_class = ref($primary);
+   my $secondary_class = $args{secondary_class};
+   my $name = $primary->Name;
+
+   my @base_objects = ref $args{base_value}
+                    ? @{ $args{base_value} }
+                    : $args{base_value};
+   my @edited_objects = ref $args{edited_value}
+                      ? @{ $args{edited_value} }
+                      : $args{edited_value};
+
+   # canonicalize to IDs
+   for (@base_objects, @edited_objects) {
+       next if $_ eq '0';
+
+       my $secondary = $secondary_class->new(RT->SystemUser);
+       my ($ok, $msg) = $secondary->Load($_);
+       die "Unable to load $secondary_class $_: $msg" if !$ok;
+       $_ = $secondary->Id;
+   }
+
+   @base_objects = sort { $a <=> $b } @base_objects;
+   @edited_objects = sort { $a <=> $b } @edited_objects;
+
+   my (@add, @remove);
+
+   while (@base_objects || @edited_objects) {
+       my $base_object = $base_objects[0];
+       my $edited_object = $edited_objects[0];
+
+       # same queue, continue with no change
+       if (($base_object//-1) == ($edited_object//-1)) {
+           shift @base_objects;
+           shift @edited_objects;
+       }
+       # ran out of base queues, add edited queue
+       elsif (!defined($base_object)) {
+           shift @edited_objects;
+           push @add, $edited_object;
+       }
+       # ran out of edited queues, remove base queue
+       elsif (!defined($edited_object)) {
+           shift @base_objects;
+           push @remove, $base_object;
+       }
+       # there's a base queue not in edited, so remove
+       elsif ($base_object < $edited_object) {
+           shift @base_objects;
+           push @remove, $base_object;
+       }
+       # there's a edited queue not in base, so add
+       elsif ($edited_object < $base_object) {
+           shift @edited_objects;
+           push @add, $edited_object;
+       }
+       else {
+           die "Should never happen";
+       }
+   }
+
+   for my $id (@add) {
+       my $secondary = $secondary_class->new(RT->SystemUser);
+       $secondary->Load($id) if $id;
+       my $secondary_name = $id ? "to $secondary_class " . $secondary->Name : "globally";
+       update_record $primary, "add $primary_class $name $secondary_name" => sub {
+           $primary->AddToObject($secondary);
+       };
+   }
+
+   for my $id (@remove) {
+       my $secondary = $secondary_class->new(RT->SystemUser);
+       $secondary->Load($id) if $id;
+       my $secondary_name = $id ? "from $secondary_class " . $secondary->Name : "globally";
+       update_record $primary, "remove $primary_class $name $secondary_name" => sub {
+           $primary->RemoveFromObject($secondary);
+       };
+   }
+}
+
 my %special_merger = (
     CustomFields => {
         ApplyTo => sub {
-            my %args = @_;
-            my $cf = $args{current_record};
-            my $name = $cf->Name;
-
-            my @base_queues = ref $args{base_value}
-                            ? @{ $args{base_value} }
-                            : $args{base_value};
-            my @edited_queues = ref $args{edited_value}
-                              ? @{ $args{edited_value} }
-                              : $args{edited_value};
-
-            # canonicalize to IDs
-            for (@base_queues, @edited_queues) {
-                next if $_ eq '0';
-
-                my $queue = RT::Queue->new(RT->SystemUser);
-                my ($ok, $msg) = $queue->Load($_);
-                die "Unable to load queue $_: $msg" if !$ok;
-                $_ = $queue->Id;
-            }
-
-            @base_queues = sort { $a <=> $b } @base_queues;
-            @edited_queues = sort { $a <=> $b } @edited_queues;
-
-            my (@add, @remove);
-
-            while (@base_queues || @edited_queues) {
-                my $base_queue = $base_queues[0];
-                my $edited_queue = $edited_queues[0];
-
-                # same queue, continue with no change
-                if (($base_queue//-1) == ($edited_queue//-1)) {
-                    shift @base_queues;
-                    shift @edited_queues;
-                }
-                # ran out of base queues, add edited queue
-                elsif (!defined($base_queue)) {
-                    shift @edited_queues;
-                    push @add, $edited_queue;
-                }
-                # ran out of edited queues, remove base queue
-                elsif (!defined($edited_queue)) {
-                    shift @base_queues;
-                    push @remove, $base_queue;
-                }
-                # there's a base queue not in edited, so remove
-                elsif ($base_queue < $edited_queue) {
-                    shift @base_queues;
-                    push @remove, $base_queue;
-                }
-                # there's a edited queue not in base, so add
-                elsif ($edited_queue < $base_queue) {
-                    shift @edited_queues;
-                    push @add, $edited_queue;
-                }
-                else {
-                    die "Should never happen";
-                }
-            }
-
-            for my $id (@add) {
-                my $queue = RT::Queue->new(RT->SystemUser);
-                $queue->Load($id) if $id;
-                my $queue_name = $id ? "to queue " . $queue->Name : "globally";
-                update_record $cf, "add custom field $name $queue_name" => sub {
-                    $cf->AddToObject($queue);
-                };
-            }
-
-            for my $id (@remove) {
-                my $queue = RT::Queue->new(RT->SystemUser);
-                $queue->Load($id) if $id;
-                my $queue_name = $id ? "from queue " . $queue->Name : "globally";
-                update_record $cf, "remove custom field $name $queue_name" => sub {
-                    $cf->RemoveFromObject($queue);
-                };
-            }
-        }
+            _object_merger(
+                secondary_class => 'RT::Queue',
+                @_,
+            );
+        },
+    },
+    Classes => {
+        ApplyTo => sub {
+            _object_merger(
+                secondary_class => 'RT::Queue',
+                @_,
+            );
+        },
     },
 );
 
