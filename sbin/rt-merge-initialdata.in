@@ -132,6 +132,23 @@ my %class_type = (
     Members => 'GroupMembers',
 );
 
+sub update_record {
+    my ($record, $description, $cb) = @_;
+
+    if ($dryrun) {
+        RT->Logger->debug("Skipping $description because of dry run.");
+        return;
+    }
+
+    my ($ok, $msg) = $cb->();
+    if ($ok) {
+        RT->Logger->debug("\u$description: $msg");
+    }
+    else {
+        RT->Logger->error("Unable to $description: $msg");
+    }
+}
+
 my %new_for_insertdata;
 
 for my $type (@record_types) {
@@ -208,18 +225,9 @@ for my $type (@record_types) {
                         }
                     }
 
-                    if ($dryrun) {
-                        RT->Logger->debug("Skipping update $record_class #$id $column from '$current_value' to '$new_value' because of dry run.");
-                        next;
-                    }
-
-                    my ($ok, $msg) = $record->$method($new_value);
-                    if ($ok) {
-                        RT->Logger->debug("Updated $record_class #$id $column: $msg");
-                    }
-                    else {
-                        RT->Logger->error("Unable to update $record_class #$id $column: $msg");
-                    }
+                    update_record $record, "update $record_class #$id $column from '$current_value' to '$new_value'" => sub {
+                        $record->$method($new_value);
+                    };
                 }
                 else {
                     die "Unable to handle updating $record_class $column (no method)";
@@ -236,30 +244,18 @@ for my $type (@record_types) {
         my $record = $record_class->new(RT->SystemUser);
         $record->Load($id);
 
-        my ($ok, $msg);
         if ($record->can('SetDisabled') || $record->_Accessible('Disabled', 'write')) {
-            if ($dryrun) {
-                RT->Logger->debug("Skipping disabling of $record_class #$id because of dry run.");
-                next;
-            }
-            ($ok, $msg) = $record->SetDisabled(1);
+            update_record $record, "disable $record_class #$id" => sub {
+                $record->SetDisabled(1);
+            };
         }
         elsif ($record->can('Delete')) {
-            if ($dryrun) {
-                RT->Logger->debug("Skipping delete of $record_class #$id because of dry run.");
-                next;
-            }
-            ($ok, $msg) = $record->Delete;
+            update_record $record, "delete $record_class #$id" => sub {
+                $record->Delete;
+            };
         }
         else {
             die "No method to delete $record_class #$id";
-        }
-
-        if ($ok) {
-            RT->Logger->debug("Deleted $record_class #$id: $msg");
-        }
-        else {
-            RT->Logger->error("Unable to delete $record_class #$id: $msg");
         }
     }
 }
