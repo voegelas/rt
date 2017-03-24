@@ -79,12 +79,27 @@ use RT;
 RT::LoadConfig();
 RT::Init();
 
+use Getopt::Long;
+use Pod::Usage qw//;
 use List::MoreUtils 'uniq';
 use JSON ();
 my $JSON = JSON->new->canonical;
 
-die "usage: $0 base edited\n" unless @ARGV == 2;
-my ($base_file, $edited_file) = @ARGV;
+my %OPT;
+GetOptions(
+    \%OPT,
+    "help|h",
+
+    "base=s",
+    "edited=s",
+);
+
+exit Pod::Usage::pod2usage(-verbose => 1) if $OPT{help};
+
+my $base_file = $OPT{base};
+my $edited_file = $OPT{edited};
+
+exit Pod::Usage::pod2usage unless $base_file && $edited_file;
 
 my $base_records = slurp_json($base_file);
 my $edited_records = slurp_json($edited_file);
@@ -316,3 +331,51 @@ sub decide_merge {
     }
 }
 
+=head1 NAME
+
+rt-merge-initialdata - Merge changes from an edited initialdata
+
+=head1 SYNOPSIS
+
+    rt-merge-initialdata --base initialdata.json --edited updated.json
+
+
+This tool allows you to edit a JSON-based initialdata file and merge
+those changes into your RT instance. The intended workflow is you first
+create an initialdata from your running RT config with:
+
+    sbin/rt-serializer --sync --format JSON
+
+Then, copy the resulting C<initialdata.json> into a new file. Edit that
+C<updated.json> to create, update, and delete records (see below for
+considerations).
+
+Then run F<rt-merge-initialdata> like so:
+
+    rt-merge-initialdata --base initialdata.json --edited updated.json
+
+F<rt-merge-initialdata> will update any records that you edited, create
+any records you added, and disable (or delete) any records you removed.
+Note that the C<id> field is used to track identity across the base,
+edited, and database versions of the same record, so take care when
+dealing with it. (Any record without an C<id> is treated as a new one to
+be created, and any record in the base which does not have a
+corresponding C<id> in the edited file will be disabled/deleted).
+
+=head2 OPTIONS
+
+=over
+
+=item B<--base> I<filename>
+
+The filename of the "base" initialdata. This should be a pristine initialdata
+file exported by F<sbin/rt-serializer>.
+
+=item B<--edited> I<filename>
+
+The filename of the "edited" initialdata. This should be a copy of the
+filename provided to C<--base> with your edits made to it.
+
+=back
+
+=cut
