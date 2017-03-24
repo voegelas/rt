@@ -140,6 +140,11 @@ for my $type (@record_types) {
         $edited_records->{$type},
         $type,
     );
+
+    next if !@$new_records
+         && !@$updated_records
+         && !@$deleted_records;
+
     RT->Logger->info("Merging changes from $type: " . scalar(@$new_records) . " new records, " . scalar(@$updated_records) . " updated, " . scalar(@$deleted_records) . " deleted");
 
     my $collection_class = "RT::" . ($class_type{$type} || $type);
