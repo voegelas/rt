@@ -77,7 +77,6 @@ BEGIN {
 
 use RT;
 RT::LoadConfig();
-RT::Init();
 
 use Getopt::Long;
 use Pod::Usage qw//;
@@ -91,6 +90,7 @@ GetOptions(
     "help|h",
     "quiet|q!",
     "log=s",
+    "dryrun",
 
     "base=s",
     "edited=s",
@@ -110,6 +110,11 @@ die "Invalid value for --merge-strategy. Expected 'base', 'current', 'edited', o
     unless !$merge_strategy || $merge_strategy =~ /^(base|current|edited|quit)$/;
 
 RT->Config->Set( LogToSTDERR => $OPT{log} ) if $OPT{log};
+
+RT::Init();
+
+my $dryrun = $OPT{'dryrun'};
+RT->Logger->debug("dryrun enabled") if $dryrun;
 
 my $base_records = slurp_json($base_file);
 my $edited_records = slurp_json($edited_file);
@@ -140,7 +145,12 @@ for my $type (@record_types) {
     my $collection_class = "RT::" . ($class_type{$type} || $type);
     my $record_class = $collection_class->RecordClass;
 
-    $new_for_insertdata{$type} = $new_records;
+    if ($dryrun) {
+        RT->Logger->debug("Skipping create of " . scalar(@$new_records) . "x $type because of dry run.") if @$new_records;
+    }
+    else {
+        $new_for_insertdata{$type} = $new_records;
+    }
 
     for (@$updated_records) {
         my ($base, $edited) = @$_;
@@ -193,6 +203,11 @@ for my $type (@record_types) {
                         }
                     }
 
+                    if ($dryrun) {
+                        RT->Logger->debug("Skipping update $record_class #$id $column from '$current_value' to '$new_value' because of dry run.");
+                        next;
+                    }
+
                     my ($ok, $msg) = $record->$method($new_value);
                     if ($ok) {
                         RT->Logger->debug("Updated $record_class #$id $column: $msg");
@@ -218,9 +233,17 @@ for my $type (@record_types) {
 
         my ($ok, $msg);
         if ($record->can('SetDisabled') || $record->_Accessible('Disabled', 'write')) {
+            if ($dryrun) {
+                RT->Logger->debug("Skipping disabling of $record_class #$id because of dry run.");
+                next;
+            }
             ($ok, $msg) = $record->SetDisabled(1);
         }
         elsif ($record->can('Delete')) {
+            if ($dryrun) {
+                RT->Logger->debug("Skipping delete of $record_class #$id because of dry run.");
+                next;
+            }
             ($ok, $msg) = $record->Delete;
         }
         else {
@@ -236,8 +259,10 @@ for my $type (@record_types) {
     }
 }
 
-my $new_json = $JSON->encode(\%new_for_insertdata);
-$RT::Handle->InsertData(\$new_json, undef, disconnect_after => 0);
+if (grep { scalar(@$_) } values %new_for_insertdata) {
+    my $new_json = $JSON->encode(\%new_for_insertdata);
+    $RT::Handle->InsertData(\$new_json, undef, disconnect_after => 0);
+}
 
 sub find_differences {
     my $base_records = shift;
@@ -439,6 +464,12 @@ Avoid nonessential output.
 =item B<--log> I<level>
 
 Adjust LogToSTDERR config option.
+
+=item B<--dryrun>
+
+Attempt to process changes but skip making any actual changes to the
+database. Changes that would have been made are logged at level C<debug>
+so you may wish to pass C<--log=debug> to see them.
 
 =back
 
