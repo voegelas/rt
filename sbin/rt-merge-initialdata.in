@@ -92,6 +92,7 @@ GetOptions(
 
     "base=s",
     "edited=s",
+    "merge-strategy=s",
 );
 
 exit Pod::Usage::pod2usage(-verbose => 1) if $OPT{help};
@@ -100,6 +101,13 @@ my $base_file = $OPT{base};
 my $edited_file = $OPT{edited};
 
 exit Pod::Usage::pod2usage unless $base_file && $edited_file;
+
+my $merge_strategy = $OPT{'merge-strategy'};
+
+die "Invalid value for --merge-strategy. Expected 'base', 'current', 'edited', or 'quit'."
+    unless !$merge_strategy || $merge_strategy =~ /^(base|current|edited|quit)$/;
+
+RT->Config->Set( LogToSTDERR => $OPT{log} ) if $OPT{log};
 
 my $base_records = slurp_json($base_file);
 my $edited_records = slurp_json($edited_file);
@@ -306,6 +314,13 @@ sub decide_merge {
         print "    Base value:     $args{base_value}\n";
         print "    Edited value:   $args{edited_value}\n";
         print "    Database value: $args{current_value}\n";
+
+        if ($merge_strategy) {
+            print "Using specified merge strategy '$merge_strategy'.\n" unless $OPT{quiet};
+            exit if $merge_strategy eq 'quit';
+            return $merge_strategy;
+        }
+
         print "Would you like to (q)uit, (s)ee more context, or set value to (b)ase, (e)dited, or (d)atabase? ";
 
         my $answer = (scalar <STDIN>) // "";
@@ -362,6 +377,13 @@ dealing with it. (Any record without an C<id> is treated as a new one to
 be created, and any record in the base which does not have a
 corresponding C<id> in the edited file will be disabled/deleted).
 
+Any changes made in the database after the base was exported will be
+untouched by F<rt-merge-initialdata>. If it turns out that a field was
+changed in both the edited initialdata I<and> the database, then a
+conflict will be presented to you with a prompt asking which version to
+keep. The C<--merge-strategy> flag lets you decide in advance to handle
+all such conflicts using a consistent strategy, to avoid prompting.
+
 =head2 OPTIONS
 
 =over
@@ -375,6 +397,35 @@ file exported by F<sbin/rt-serializer>.
 
 The filename of the "edited" initialdata. This should be a copy of the
 filename provided to C<--base> with your edits made to it.
+
+=item B<--merge-strategy> I<strategy>
+
+Automatically resolve all conflicts without prompting the user. The
+following merge strategies are available:
+
+=over 4
+
+=item C<edited>
+
+Take the edits as specified in the edited initialdata, overwriting the
+change made in the database after the base was exported.
+
+=item C<current>
+
+Keep the database's current value, ignoring the change made in the
+edited initialdata.
+
+=item C<base>
+
+Revert to the base initialdata's value, rolling back the change made in
+the database and ignoring the change made in the edited initialdata.
+
+=item C<quit>
+
+Abort processing at the first conflict. Note that this will likely
+result in a subset of the edits being applied to your database.
+
+=back
 
 =back
 
