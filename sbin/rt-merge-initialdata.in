@@ -89,6 +89,8 @@ my %OPT;
 GetOptions(
     \%OPT,
     "help|h",
+    "quiet|q!",
+    "log=s",
 
     "base=s",
     "edited=s",
@@ -133,6 +135,7 @@ for my $type (@record_types) {
         $edited_records->{$type},
         $type,
     );
+    RT->Logger->info("Merging changes from $type: " . scalar(@$new_records) . " new records, " . scalar(@$updated_records) . " updated, " . scalar(@$deleted_records) . " deleted");
 
     my $collection_class = "RT::" . ($class_type{$type} || $type);
     my $record_class = $collection_class->RecordClass;
@@ -309,11 +312,13 @@ sub decide_merge {
 
     local $| = 1;
     while (1) {
-        print "\n";
-        print "Conflict resolution required for $type #$id $args{column}:\n";
-        print "    Base value:     $args{base_value}\n";
-        print "    Edited value:   $args{edited_value}\n";
-        print "    Database value: $args{current_value}\n";
+        unless ($OPT{quiet} && $merge_strategy) {
+            print "\n";
+            print "Conflict resolution required for $type #$id $args{column}:\n";
+            print "    Base value:     $args{base_value}\n";
+            print "    Edited value:   $args{edited_value}\n";
+            print "    Database value: $args{current_value}\n";
+        }
 
         if ($merge_strategy) {
             print "Using specified merge strategy '$merge_strategy'.\n" unless $OPT{quiet};
@@ -426,6 +431,14 @@ Abort processing at the first conflict. Note that this will likely
 result in a subset of the edits being applied to your database.
 
 =back
+
+=item B<--quiet>
+
+Avoid nonessential output.
+
+=item B<--log> I<level>
+
+Adjust LogToSTDERR config option.
 
 =back
 
