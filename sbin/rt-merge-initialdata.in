@@ -173,8 +173,8 @@ sub _object_merger {
        $_ = $secondary->Id;
    }
 
-   @base_objects = sort { $a <=> $b } @base_objects;
-   @edited_objects = sort { $a <=> $b } @edited_objects;
+   @base_objects = uniq sort { $a <=> $b } @base_objects;
+   @edited_objects = uniq sort { $a <=> $b } @edited_objects;
 
    my (@add, @remove);
 
