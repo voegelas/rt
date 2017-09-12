@@ -59,7 +59,7 @@ my $CatalogObj = $AssetObj->CatalogObj;
 %      $users->FindAllRows;
 %      my $user = $users->Next;
 <& /Elements/ShowUser, User => $user, Link => 1 &></td></tr>
-%      next if $user->id == RT->Nobody->id;
+%      next if $user && $user->id == RT->Nobody->id;
 <tr><td>
 <& ShowRoleMembers, Group => $AssetObj->RoleGroup($role), Title => 0 &>
 </div></td></tr>
