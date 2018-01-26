@@ -1712,8 +1712,18 @@ sub _CanonicalizeValueDateTime {
     my $self    = shift;
     my $args    = shift;
     my $DateObj = RT::Date->new( $self->CurrentUser );
-    $DateObj->Set( Format => 'unknown',
-                   Value  => $args->{'Content'} );
+
+    # Parsing unknown is a heavier operation, so try iso first since that's
+    # what will come from RT's web UI
+    my $ret = $DateObj->Set( Format => 'iso',
+                             Value  => $args->{'Content'} );
+
+    # If ISO didn't work, try to guess
+    unless ( $ret ) {
+        $DateObj->Set( Format => 'unknown',
+                       Value  => $args->{'Content'} );
+    }
+
     $args->{'Content'} = $DateObj->ISO;
     return 1;
 }
