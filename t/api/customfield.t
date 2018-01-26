@@ -1,3 +1,5 @@
+use Test::MockTime qw(set_fixed_time restore_time);
+use DateTime;
 
 use strict;
 use warnings;
@@ -389,6 +391,46 @@ like($cf->Description, qr/Global/, "Prefers the global one with IncludeGlobal" )
 $cf = RT::CustomField->new( RT->SystemUser );
 $cf->LoadByName(Name => 'TestingCF', Queue => 1, IncludeDisabled => 0 );
 ok( ! $cf->id, "Doesn't find it if IncludeDisabled => 0" );
+
+diag('Test _CanonicalizeValueDateTime');
+
+{
+    my %args;
+    my $cf_date = RT::CustomField->new( RT->SystemUser );
+    $args{'Content'} = '2005112815:10:00';
+
+    $cf_date->_CanonicalizeValueDateTime(\%args);
+    is($args{'Content'}, '2005-11-28 15:10:00', "YYYYDDMMhh:mm:ss");
+
+    $args{'Content'} = '20051128T15:10:00';
+    $cf_date->_CanonicalizeValueDateTime(\%args);
+    is($args{'Content'}, '2005-11-28 15:10:00', "YYYYDDMMThh:mm:ss");
+
+    $args{'Content'} = '2005-11-28 15:10:00';
+    $cf_date->_CanonicalizeValueDateTime(\%args);
+    is($args{'Content'}, '2005-11-28 15:10:00', "YYYY-DD-MM hh:mm:ss");
+}
+
+diag('Test relative dates');
+{
+    my %args;
+    my $cf_date = RT::CustomField->new( RT->SystemUser );
+
+    set_fixed_time("2005-11-28T15:10:00Z");
+    $args{'Content'} = 'now';
+    warning_like {
+        $cf_date->_CanonicalizeValueDateTime(\%args);
+    } qr/as a iso format/, "Couldn't parse as iso";
+
+    is($args{'Content'}, '2005-11-28 15:10:00', "now");
+
+    $args{'Content'} = '1 day ago';
+    warning_like {
+        $cf_date->_CanonicalizeValueDateTime(\%args);
+    } qr/as a iso format/, "Couldn't parse as iso";
+    is($args{'Content'}, '2005-11-27 15:10:00', "1 day ago");
+    restore_time();
+}
 
 
 done_testing;
