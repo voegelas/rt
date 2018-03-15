@@ -189,23 +189,58 @@ jQuery( function() {
 });
 </script>
 
-<div class="ticket-timer">
-    <div class="ticket-link">
-        <a target="_blank" href="<%RT->Config->Get('WebPath')%>/Ticket/Display.html?id=<%$Ticket->Id%>">
-            <img src="<% RT->Config->Get('WebPath') %>/static/images/stopwatch.png" alt="<% loc('Stopwatch') %>" />
-            <%$Ticket->Id%>: <%$Ticket->Subject%>
-        </a>
+%#<div style="height: 100vh; display: table; width: 100%; background-color: gray">
+%#  <div style="display: table-header-group">
+%#    <div style="height: 30px; background-color: red; display: table-cell">
+%#      Completely unrelated content.
+%#    </div>
+%#  </div>
+%#  <div style="display: table-row">
+%#    <div style="height: 2em; background-color: blue; display: table-cell">
+%#      Its full of starts!
+%#    </div>
+%#  </div>
+%#  <div style="display: table-row">
+%#    <div style="background-color: green; display: table-cell">
+%#      Oh, hi, Mark.
+%#    </div>
+%#  </div>
+%#  <div style="display: table-footer-group">
+%#    <div style="height: 30px; background-color: red; display table-cell">
+%#      More unrelated content.
+%#    </div>
+%#  </div>
+%#</div>
+
+  <div class="ticket-timer">
+    <div style="display: table-header-group">
+        <div class="ticket-link">
+            <a target="_blank" href="<%RT->Config->Get('WebPath')%>/Ticket/Display.html?id=<%$Ticket->Id%>">
+                <img src="<% RT->Config->Get('WebPath') %>/static/images/stopwatch.png" alt="<% loc('Stopwatch') %>" />
+                <%$Ticket->Id%>: <%$Ticket->Subject%>
+            </a>
+        </div>
     </div>
 
-    <div class="gutter">
-        <div class="readout"></div>
+    <div style="display: table-row">
+        <div class="readout" style="display: table-cell; height: 1em"></div>
+    </div>
 
+    <div style="display: table-row; height: 24px">
         <div class="control-line">
             <a href="#" class="playpause"><img src="<% $PauseImg %>" alt="<% loc('Pause Timer') %>" data-toggle-alt="<% loc('Resume Timer') %>" title="<% loc('Pause Timer') %>" /></a>
             <a href="#" class="submit-time"><img src="<% RT->Config->Get('WebPath') %>/static/images/submit.png" alt="<% loc('Submit Timer') %>" title="<% loc('Submit Timer') %>" /></a>
             <a href="#" class="close-popup hidden"><img src="<% RT->Config->Get('WebPath') %>/static/images/close.png" alt="<% loc('Close Window') %>" title="<% loc('Close Window') %>" /></a>
         </div>
+    </div>
 
+    <div style="display: table-row">
+        <style>
+            textarea {
+                height: 100%;
+                resize: none;
+            }
+        </style>
         <& /Elements/MessageBox,
             Name => 'Comment',
             Type => 'text/plain',
@@ -218,13 +253,16 @@ jQuery( function() {
         &>
     </div>
 
-    <div class="extra"><&|/l, $Now->AsString &>Started at [_1].</&></div>
-
+    <div style="display: table-footer-group">
+        <div style="display: table-cell">
+            <div class="extra"><&|/l, $Now->AsString &>Started at [_1].</&></div>
+    
 % if ($Ticket->TimeEstimated) {
-    <div class="extra"><&|/l&>Time estimated</&>: <& /Ticket/Elements/ShowTime, minutes => $Ticket->TimeEstimated &></div>
+            <div class="extra"><&|/l&>Time estimated</&>: <& /Ticket/Elements/ShowTime, minutes => $Ticket->TimeEstimated &></div>
 % }
-
-    <div class="on-error"><&|/l&>An error occurred while submitting time. Please submit your time manually.</&></div>
+            <div class="on-error"><&|/l&>An error occurred while submitting time. Please submit your time manually.</&></div>
+        </div>
+    </div>
 
 </div>
 

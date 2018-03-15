@@ -1,5 +1,9 @@
 .ticket-timer {
     padding: 1em;
+    height: 100vh;
+    width: 100vw;
+    display: table;
+    table-layout: fixed;
 }
 
 .ticket-timer img {
@@ -19,12 +23,15 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: table-cell;
 }
 
 .ticket-timer .readout {
     font-size: 2em;
     text-align: center;
+    height: 1em;
     width: 100%;
+    display: table-cell;
 }
 
 .ticket-timer .control-line {
