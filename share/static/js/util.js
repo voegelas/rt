@@ -216,6 +216,29 @@ function checkboxToInput(target,checkbox,val){
     tar.change();
 }
 
+function checkboxesToInput(target,checkboxes) {
+    var tar = jQuery('#' + escapeCssSelector(target));
+
+    jQuery(checkboxes).each(function(index, checkbox) {
+        var val = jQuery(checkbox).attr('data-address');
+        if(jQuery(checkbox).prop('checked')){
+            if (tar.val()==''){
+                tar.val(val);
+            }
+            else{
+                tar.val(val+', '+ tar.val());
+            }
+        }
+        else{
+            tar.val(tar.val().replace(val+', ',''));
+            tar.val(tar.val().replace(val,''));
+        }
+    });
+
+    jQuery('#UpdateIgnoreAddressCheckboxes').val(true);
+    tar.change();
+}
+
 // ahah for back compatibility as plugins may still use it
 function ahah( url, id ) {
     jQuery('#'+id).load(url);
