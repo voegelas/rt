@@ -286,7 +286,7 @@ my %supported_opt = map { $_ => 1 } qw(
        verbose
 );
 
-our $RE_FILE_EXTENSIONS = qr/pgp|asc/i;
+our $RE_FILE_EXTENSIONS = qr/pgp|asc|gpg/i;
 
 # DEV WARNING: always pass all STD* handles to GnuPG interface even if we don't
 # need them, just pass 'IO::Handle->new()' and then close it after safe_run_child.
