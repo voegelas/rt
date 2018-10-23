@@ -130,6 +130,11 @@ sub Connect {
         my $version = $self->DatabaseVersion;
         ($version) = $version =~ /^(\d+\.\d+)/;
         $self->dbh->do("SET NAMES 'utf8'") if $version >= 4.1;
+
+        if ( $self->dbh->selectrow_arrayref("SHOW TABLES LIKE 'Tickets'") ) {
+            $self->{_unsafe_4bytes_utf8} = 1
+              unless $self->dbh->selectrow_arrayref("SHOW CREATE TABLE Tickets")->[1] =~ /charset=utf8mb4/i;
+        }
     }
     elsif ( $db_type eq 'Pg' ) {
         my $version = $self->DatabaseVersion;
