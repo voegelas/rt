@@ -119,5 +119,25 @@ diag 'submit no value on ticket update page';
         0, 'no txn cf value in db' );
 }
 
+diag 'submit only transaction CF value on ticket update page';
+{
+    $m->follow_link_ok( { text => 'Reply' }, "reply to the ticket" );
+
+    $m->content_contains($cf_name, 'has cf field' );
+
+    $m->form_name('TicketUpdate');
+    $m->field("Object-RT::Transaction--CustomField-$cfid-Values" => 'Only CF value on update');
+    $m->click('SubmitTicket');
+
+    $m->content_contains('Transaction custom field set');
+
+    my $txns = $ticket->Transactions;
+    $txns->Limit(FIELD => 'Type', VALUE => 'TransCustomField');
+    is( $txns->Last->CustomFieldValues($cfid)->Count,
+        1, 'Transaction set for ticket transaction CF update with no content'
+    );
+}
+
+
 done_testing;
 
