@@ -94,8 +94,8 @@
     <td><input name="UpdateDescription" value="<% $ARGS{'Description'}||'' %>" size="40"></td>
   </tr>
   <tr class="asset-status">
-    <td class="label"><label for="UpdateStatus"><&|/l&>Status</&></label></td>
-    <td><& /Asset/Elements/SelectStatus, Name => 'UpdateStatus', DefaultValue => 1, CatalogObj => $catalog_obj &></td>
+    <td class="label"><label for="UnreadMessages"><&|/l&>Status</&></label></td>
+    <td><& /Asset/Elements/SelectStatus, Name => 'UnreadMessages', DefaultValue => 1, CatalogObj => $catalog_obj &></td>
   </tr>
 </table>
 %   my $cfs = $catalog_obj->AssetCustomFields;

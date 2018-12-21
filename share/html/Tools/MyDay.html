@@ -64,7 +64,7 @@ href="<%RT->Config->Get('WebPath')%>/Ticket/Display.html?id=<%$Ticket->Id%>"><%$
 <td rowspan="2"><span class="label"><&|/l&>Comments</&>:<br /></span><textarea name="UpdateContent-<%$Ticket->Id%>" rows="5"
 cols="60"></textarea></td></tr>
 <tr <%$class|n%>>
-<td><span class="label"><&|/l&>Status</&>:</span> <& /Ticket/Elements/SelectStatus, Name=> 'UpdateStatus-'.$Ticket->Id, TicketObj => $Ticket &></td>
+<td><span class="label"><&|/l&>Status</&>:</span> <& /Ticket/Elements/SelectStatus, Name=> 'UnreadMessages-'.$Ticket->Id, TicketObj => $Ticket &></td>
                   </tr>
 
 % }
@@ -78,7 +78,7 @@ my $title = loc("What I did today");
 my $i = 0;
 my @results;
 foreach my $arg ( keys %ARGS ) {
-    next unless ( $arg =~ /^UpdateStatus-(\d*)$/ );
+    next unless ( $arg =~ /^UnreadMessages-(\d*)$/ );
     my $id     = $1;
     my $ticket = LoadTicket($id);
     next unless ( $ticket->id );
@@ -93,7 +93,7 @@ foreach my $arg ( keys %ARGS ) {
             push @results, loc( "Ticket [_1]: [_2]", $id, $msg );
     }
 
-    if ( my $status = $ARGS{ 'UpdateStatus-' . $id } ) {
+    if ( my $status = $ARGS{ 'UnreadMessages-' . $id } ) {
         if ( $status ne $ticket->Status ) {
             my ( $val, $msg ) = $ticket->SetStatus($status);
             push @results, loc( "Ticket [_1]: [_2]", $id, $msg );

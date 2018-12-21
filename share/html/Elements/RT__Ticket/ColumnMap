@@ -263,7 +263,7 @@ $COLUMN_MAP = {
         title     => 'SLA', # loc
         value     => sub { return $_[0]->SLA }
     },
-    UpdateStatus => {
+    UnreadMessages => {
         title => 'New messages', # loc
         value => sub {
             my $txn = $_[0]->SeenUpTo or return $_[0]->loc('No');
