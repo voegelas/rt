@@ -113,8 +113,13 @@ jQuery(function(){
         jQuery(".history-container").append(loadLink);
     };
 
-    var loadHistoryPage = function() {
+    var loadHistoryPage = function(path) {
         if (isLoading || disableLoading) return;
+
+        if ( path ) {
+            var regex = /.*(#txn-(\d+)$)/;
+            hash = regex.exec(path)[1];
+        }
 
         isLoading = true;
         showLoadingMessage();
@@ -127,7 +132,7 @@ jQuery(function(){
         loadAll = false;
 
         // check for link to specific transaction and make sure we load enough to focus it
-        if (hash && !lastTransactionId) {
+        if ( ( hash && !lastTransactionId ) || path ) {
             var matches = hash.match(/^#txn-(\d+)$/);
             if (matches) {
                 hashTransactionId = matches[1];
@@ -201,5 +206,9 @@ jQuery(function(){
     });
 
     loadHistoryPage();
+
+    jQuery("#JumpToUnread").click(function(){
+        loadHistoryPage(jQuery(this).attr('href'));
+    });
 });
 </script>
