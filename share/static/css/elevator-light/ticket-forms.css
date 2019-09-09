@@ -8,3 +8,7 @@
 .sidebyside #ticket-update-message .button[name="AddMoreAttach"] {
     margin-right: -0.25em;
 }
+
+div.articles-select-article {
+    margin-bottom: 0.25em;
+}
