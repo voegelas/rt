@@ -44,3 +44,11 @@ table.myday td {
     font-size: 0.8em;
     white-space: normal;
 }
+
+div.asset-people h3 {
+    font-size: 100%;
+    line-height: 1.50em;
+    font-weight: 400;
+}
+
+
