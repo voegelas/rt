@@ -51,4 +51,10 @@ div.asset-people h3 {
     font-weight: 400;
 }
 
+div.asset-people a.user-summary {
+    position: absolute;
+    right: 0;
+    text-decoration: underline;
+}
+
 
