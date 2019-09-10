@@ -61,10 +61,12 @@ my $CatalogObj = $AssetObj->CatalogObj;
 %      $users->FindAllRows;
 %      my $user = $users->Next;
     <div class="col-md-9 value">
+      <span class="form-control current-value">
       <& /Elements/ShowUser, User => $user, Link => 1 &>
 %     if ( $user->id != RT->Nobody->id ) {
           <& ShowRoleMembers, Group => $AssetObj->RoleGroup($role), Title => 0 &>
 %     }
+      </span>
     </div>
 % } else {
     <div class="user-accordion col-md-9">
