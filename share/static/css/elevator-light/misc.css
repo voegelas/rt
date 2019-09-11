@@ -61,3 +61,6 @@ div.asset-people span.current-value {
     height: auto;
 }
 
+div.asset-people .ui-accordion .ui-accordion-content {
+    overflow: visible;
+}
