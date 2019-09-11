@@ -2205,6 +2205,20 @@ Set( $AssetBasicCustomFieldsOnCreate, [ 'foo', 'bar' ] );
 
 =back
 
+=item C<$UserAssetExtraInfo>
+
+The information that is displayed on asset display pages about users related
+to the asset. This is displayed as a drop down box underneath the user name.
+
+e.g.
+
+Set($UserAssetExtraInfo, q{
+    RealName,
+    EmailAddress,
+});
+
+=cut
+
 =head2 Message box properties
 
 =over 4
