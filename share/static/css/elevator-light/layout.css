@@ -31,25 +31,33 @@ div#body {
 }
 
 div#footer {
-    position: absolute;
-    right: 0;
-    text-align: right;
-    font-size: 0.9em;
-    margin-top: 2em;
-    background: #fff;
-    margin-bottom: 0;
-    padding-left: 3em;
-    padding-right: 1em;
+    font-size: 0.8em;
+    background: #2C3539;
+    height: 50px;
+    position: relative;
+}
+
+a.footer {
+    color: white;
+}
+
+p#bpscredits {
+    color: white;
+    text-align: center;
+    position: fixed;
+    bottom: -10px;
+    width: 100%;
 }
 
 div#footer #time {
     display: none
 }
 
-div#footer #bpscredits {
-    text-align: right;
-    background: url(../../../static/images/bpslogo.png) no-repeat top right;
-    padding-top: 4em;
+div#footer {
+    background-image: url(../../../static/images/bpslogo.png);
+    background-repeat: no-repeat;
+    background-position: bottom 2em center;
+    background-size: auto 50%;
 }
 
 /* logo stuff */
