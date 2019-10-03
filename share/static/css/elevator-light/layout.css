@@ -37,23 +37,45 @@ div#footer {
     position: relative;
 }
 
-a.footer {
+div#footerlogin {
+    font-size: 0.8em;
+    background: #2C3539;
+    height: 50px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+a.footer, a.footerlogin {
     color: white;
 }
 
 p#bpscredits {
     color: white;
     text-align: center;
-    position: fixed;
-    bottom: -10px;
+    position: relative;
+    bottom: -5px;
     width: 100%;
 }
 
-div#footer #time {
-    display: none
+p#legal {
+    color: white;
+    font-size: 0.7em;
+    text-align: right;
+    position: fixed;
+    bottom: -10px;
+    right: 5px;
 }
 
-div#footer {
+div#footer #time, div#footerlogin #time {
+    display: none;
+    position: relative;
+    bottom: -30px;
+    left: 5px;
+    color: lightgray;
+}
+
+div#footer, div#footerlogin {
     background-image: url(../../../static/images/bpslogo.png);
     background-repeat: no-repeat;
     background-position: bottom 2em center;
