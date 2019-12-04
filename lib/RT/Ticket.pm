@@ -1787,7 +1787,7 @@ sub Atomic {
     }
 
     if ($RT::Handle->TransactionDepth == $depth) {
-        $self->ApplyTransactionBatch if $self->{Atomic} == 1;
+        $self->ApplyTransactionBatch if $self->{Atomic} == 1 && !$self->{DryRun};
         $RT::Handle->Commit;
         $self->{Atomic}--;
     }
