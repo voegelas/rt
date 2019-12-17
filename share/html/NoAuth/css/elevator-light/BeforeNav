@@ -74,7 +74,7 @@ var rebalanceOverflowMenu = function (menuId, overflowId, withLogo) {
 
     // adjustments specific to page-navigation
     if (menuId === '#page-menu') {
-        availableWidth -= jQuery('#header h1').width() + rebalanceOverflowBuffer;
+        availableWidth -= jQuery('#header h1').width() + jQuery('#header h1').offset().left;
     }
 
     availableWidth -= rebalanceOverflowBuffer;
