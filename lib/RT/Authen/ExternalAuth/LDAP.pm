@@ -205,7 +205,6 @@ sub GetAuth {
     my $group_attr      = $config->{'group_attr'};
     my $group_attr_val  = $config->{'group_attr_value'} || 'dn';
     my $group_scope     = $config->{'group_scope'} || 'base';
-    my $attr_map        = $config->{'attr_map'};
     my @attrs           = ('dn');
 
     # Make sure we fetch the user attribute we'll need for the group check
@@ -221,11 +220,8 @@ sub GetAuth {
     my $ldap = _GetBoundLdapObj($config);
     return 0 unless ($ldap);
 
-    $filter = Net::LDAP::Filter->new(   '(&(' .
-                                        $attr_map->{'Name'} .
-                                        '=' .
-                                        escape_filter_value($username) .
-                                        ')' .
+    $filter = Net::LDAP::Filter->new(   '(&' .
+                                        _name_filter( $config, $username) .
                                         $filter .
                                         ')'
                                     );
@@ -353,6 +349,26 @@ sub GetAuth {
     return 1;
 
 }
+
+sub _name_filter {
+    my( $config, $user)= @_;
+    my $attr_map   = $config->{'attr_map'};
+    my $match_attr = $config->{'attr_match_list'};
+    $match_attr = [ 'Name' ] if !$match_attr || ! @$match_attr;
+    my $match_attr_filter=  _or_filter( map { _eq_filter( $attr_map->{$_}, $user) } @$match_attr);
+    return $match_attr_filter;
+
+}
+sub _or_filter {
+    return '(|' . join( '', @_ ) . ')';
+}
+
+sub _eq_filter {
+    my( $attr, $user)= @_;
+    $user = escape_filter_value( $user);
+    return "($attr=$user)";
+}
+
 
 
 sub CanonicalizeUserInfo {
@@ -540,11 +556,8 @@ sub UserExists {
         # Construct the complex filter
         $filter = Net::LDAP::Filter->new(           '(&' .
                                                     $filter .
-                                                    '(' .
-                                                    $config->{'attr_map'}->{'Name'} .
-                                                    '=' .
-                                                    escape_filter_value($username) .
-                                                    '))'
+                                                    _name_filter( $config, $username) .
+                                                    ')'
                                         );
     }
 
@@ -583,10 +596,14 @@ sub UserExists {
                             "More than one user with that username!");
         return 0;
     }
+
+    my $ldap_name_attr = $config->{'attr_map'}->{'Name'};
+    my $username_found = $user_found->entry( 0 )->get_value( $ldap_name_attr ) if $ldap_name_attr;
     undef $user_found;
 
     # If we havent returned now, there must be a valid user.
-    return 1;
+    # return the username (in case login was done through an other field, like the email address)
+    return $username_found || 1;
 }
 
 sub UserDisabled {
@@ -603,6 +620,7 @@ sub UserDisabled {
     my $base            = $config->{'base'};
     my $filter          = $config->{'filter'};
     my $d_filter        = $config->{'d_filter'};
+    my $attr_map        = $config->{'attr_map'};
     my $search_filter;
 
     # While LDAP filters must be surrounded by parentheses, an empty set
@@ -625,11 +643,8 @@ sub UserDisabled {
         $search_filter = Net::LDAP::Filter->new(   '(&' .
                                                     $filter .
                                                     $d_filter .
-                                                    '(' .
-                                                    $config->{'attr_map'}->{'Name'} .
-                                                    '=' .
-                                                    escape_filter_value($username) .
-                                                    '))'
+                                                    _name_filter( $config, $username) .
+                                                    ')'
                                                 );
     } else {
         $RT::Logger->debug("You haven't specified an LDAP attribute to match the RT \"Name\" attribute for this service (",

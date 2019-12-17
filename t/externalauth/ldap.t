@@ -192,6 +192,30 @@ diag "test user update via login";
     );
 }
 
+diag "test login via email address";
+{
+    $m->logout;
+    my $username = "anotheruser";
+    my $base     = "dc=bestpractical,dc=com";
+    my $dn       = "uid=$username,$base";
+    my $entry    = {
+        cn           => $username,
+        mail         => "$username\@invalid.tld",
+        uid          => $username,
+        objectClass  => 'User',
+        userPassword => 'password',
+        employeeType => 'engineer',
+        employeeID   => '234',
+    };
+    $ldap->add( $base );
+    $ldap->add( $dn, attr => [%$entry] );
+    # first login (creates the user)
+    ok( $m->login( $entry->{email}, 'password' ), 'logged in using email address' );
+    # second login
+    $m->logout;
+    ok( $m->login( $entry->{email}, 'password' ), 'logged in existing user using email address' );
+}
+
 $ldap->unbind();
 
 done_testing;
