@@ -365,7 +365,8 @@ form .value > .list-group {
   line-height: inherit;
 }
 
-.btn {
+.btn,
+.btn-md {
   font-weight: 500;
 }
 
@@ -392,4 +393,9 @@ textarea.code {
 
 #EditConfig ul.plugins {
     margin: 0;
+}
+
+/* center text between 2 dropdowns */
+.text-between-dropdowns {
+    text-align: center;
 }
