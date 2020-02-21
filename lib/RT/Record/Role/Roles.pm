@@ -248,7 +248,17 @@ Returns an empty hashref if the role doesn't exist.
 =cut
 
 sub Role {
-    return \%{ $_[0]->_ROLES->{$_[1]} || {} };
+    my $self = shift;
+    my $name = shift;
+    my %item = %{ $self->_ROLES->{$name} || {} };
+
+    if ( ref $self && $self->Id && $name =~ /^RT::CustomRole-(\d+)/ ) {
+        my $id  = $1;
+        my $ocr = RT::ObjectCustomRole->new( $self->CurrentUser );
+        $ocr->LoadByCols( ObjectId => $self->Id, CustomRole => $id );
+        $item{SortOrder} = $ocr->SortOrder if $ocr->Id;
+    }
+    return \%item;
 }
 
 =head2 Roles
