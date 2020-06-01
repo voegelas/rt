@@ -4,7 +4,7 @@ use warnings;
 use RT::Test::Assets tests => undef;
 
 my $catalog = create_catalog( Name => "A catalog" );
-my $asset = create_asset( Name => "Test asset", Catalog => $catalog->id );
+my $asset = create_asset( Name => "Test asset", Catalog => $catalog->id, LazyRoleGroups => 0 );
 ok $asset && $asset->id, "Created asset";
 
 for my $object ($asset, $catalog, RT->System) {
