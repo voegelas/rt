@@ -360,7 +360,7 @@ sub RoleLimit {
         # positive condition case
 
         $group_members ||= $self->_GroupMembersJoin(
-            GroupsAlias => $groups, New => 1, Left => 0
+            GroupsAlias => $groups, New => 1,
         );
         if ($args{FIELD} eq "id") {
             # Save a left join to Users, if possible

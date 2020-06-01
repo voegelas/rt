@@ -692,7 +692,17 @@ sub _AddRolesOnCreate {
         my $changed = 0;
 
         for my $role (keys %{$roles}) {
+            next unless @{$roles->{$role}};
+
             my $group = $self->RoleGroup($role);
+            if ( !$group->id ) {
+                $group = $self->_CreateRoleGroup($role);
+                if ( !$group || !$group->id ) {
+                    push @errors, $self->loc( "Couldn't create role group '[_1]'", $role );
+                    next;
+                }
+            }
+
             my @left;
             for my $principal (@{$roles->{$role}}) {
                 if ($acls{$role}->($principal)) {
