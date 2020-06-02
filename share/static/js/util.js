@@ -988,6 +988,23 @@ jQuery(function() {
         selector: '[data-toggle=tooltip]',
         trigger: 'hover focus'
     });
+
+    // Try harder to not wrap tooltips. If tooltip icons don't collapse
+    // with the following content, keep them in one row with label text.
+    jQuery('div.label > svg[data-toggle="tooltip"]').each( function() {
+        var svg   = jQuery(this);
+        var label = jQuery(this).parent();
+        var value = label.siblings('div.value');
+        if ( value.length ) {
+            var origin = label.css('white-space');
+            label.css('white-space', 'nowrap');
+            var svg_content_right = svg.offset().left + svg.width() + parseInt(svg.css('padding-left'));
+            var value_content_left = value.offset().left + parseInt(value.css('padding-left'));
+            if ( svg_content_right >= value_content_left ) {
+                label.css('white-space', origin);
+            }
+        }
+    } );
 });
 
 // toggle bookmark for Ticket/Elements/Bookmark.
