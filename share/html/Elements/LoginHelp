@@ -49,6 +49,7 @@
 <&|/l, RT->Config->Get('OwnerEmail')&>For local help, please contact [_1]</&>
 </div>
 <%init>
+return if RT->Config->Get('HideOwnerEmailFromLogin');
 my $source = RT->Config->Meta('OwnerEmail')->{Source};
 return unless $source->{SiteConfig} or $source->{Extension};
 </%init>

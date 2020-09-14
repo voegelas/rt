@@ -393,6 +393,8 @@ displayed as the contact person on the RT's login page.  Because RT
 sends errors to this address, it should I<not> be an address that's
 managed by your RT instance, to avoid mail loops.
 
+See also L</$HideOwnerEmailFromLogin>.
+
 =cut
 
 Set($OwnerEmail, 'root');
@@ -2013,6 +2015,15 @@ L<https://nagix.github.io/chartjs-plugin-colorschemes/colorchart.html>
 =cut
 
 Set($JSChartColorScheme, 'brewer.Paired12');
+
+=item C<$HideOwnerEmailFromLogin>
+
+By default C<$OwnerEmail> is displayed as the contact person on login
+page. Set this to 1 to hide it.
+
+=cut
+
+Set($HideOwnerEmailFromLogin, 0);
 
 =back
 

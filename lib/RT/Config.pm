@@ -1552,6 +1552,9 @@ our %META;
     HideArticleSearchOnReplyCreate => {
         Widget => '/Widgets/Form/Boolean',
     },
+    HideOwnerEmailFromLogin => {
+        Widget => '/Widgets/Form/Boolean',
+    },
     HideResolveActionsWithDependencies => {
         Widget => '/Widgets/Form/Boolean',
     },
