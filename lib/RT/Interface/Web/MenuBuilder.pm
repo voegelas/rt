@@ -625,19 +625,19 @@ sub BuildMainNav {
         $fallback_query_args{Class} ||= $class;
         $fallback_query_args{ObjectType} ||= 'RT::Ticket' if $class eq 'RT::Transactions';
 
+        if ( my $extra_params = $HTML::Mason::Commands::DECODED_ARGS->{ExtraQueryParams} ) {
+            $fallback_query_args{ExtraQueryParams} = $extra_params;
+            for my $param ( ref $extra_params eq 'ARRAY' ? @$extra_params : $extra_params ) {
+                $fallback_query_args{$param} = $HTML::Mason::Commands::DECODED_ARGS->{$param};
+            }
+        }
+
         if ($query_string) {
             $args = '?' . $query_string;
         }
         else {
             my %final_query_args = ();
             # key => callback to avoid unnecessary work
-
-            if ( my $extra_params = $query_args->{ExtraQueryParams} ) {
-                $final_query_args{ExtraQueryParams} = $extra_params;
-                for my $param ( ref $extra_params eq 'ARRAY' ? @$extra_params : $extra_params ) {
-                    $final_query_args{$param} = $query_args->{$param};
-                }
-            }
 
             for my $param (keys %fallback_query_args) {
                 $final_query_args{$param} = defined($query_args->{$param})
