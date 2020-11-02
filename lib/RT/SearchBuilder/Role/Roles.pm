@@ -235,7 +235,7 @@ sub RoleLimit {
 
     my $column = $type ? $class->Role($type)->{Column} : undef;
 
-    # if it's equality op and search by Email or Name then we can preload user
+    # if it's equality op and search by Email or Name then we can preload user/group
     # we do it to help some DBs better estimate number of rows and get better plans
     if ( $args{OPERATOR} =~ /^!?=$/
              && (!$args{FIELD} || $args{FIELD} eq 'Name' || $args{FIELD} eq 'EmailAddress') ) {
@@ -245,8 +245,27 @@ sub RoleLimit {
             ? ($column ? 'Load' : 'LoadByEmail')
             : $args{FIELD} eq 'EmailAddress' ? 'LoadByEmail': 'Load';
         $o->$method( $args{VALUE} );
+        my @values;
+        @values = $o->Id if $o->Id;
+
+        if ( !$args{FIELD} || $args{FIELD} eq 'Name' ) {
+            my $group = RT::Group->new( $self->CurrentUser );
+            $group->LoadUserDefinedGroup( $args{VALUE} );
+            push @values, $group->Id if $group->Id;
+        }
+
         $args{FIELD} = 'id';
-        $args{VALUE} = $o->id || 0;
+        if ( @values == 1 ) {
+            $args{VALUE} = $values[0];
+        }
+        elsif ( @values > 1 ) {
+            RT->Logger->debug("Name $args{VALUE} is used in both user and group");
+            $args{VALUE} = \@values;
+            $args{OPERATOR} = $args{OPERATOR} =~ /!/ ? 'NOT IN' : 'IN';
+        }
+        else {
+            $args{VALUE} = 0;
+        }
     }
 
     if ( $column and $args{FIELD} and $args{FIELD} eq 'id' ) {
