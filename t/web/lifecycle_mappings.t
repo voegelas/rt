@@ -144,7 +144,82 @@ diag "Confirm the web UI correctly displays mappings";
             is ($input->value, $from->{$default_status}, "Mapping set correctly for default -> foo for status: $default_status" );
         }
         elsif ( $foo_from ) {
-            is ( $input->value, $to->{$foo_status}, "Mapping set correctly for foo -> default for status: $foo_to" );
+            is ( $input->value, $to->{$foo_status}, "Mapping set correctly for foo -> default for status: $foo_status" );
+        }
+    }
+}
+
+diag "Test RT::Lifecycle::ParseMappingsInput method";
+{
+    my %args = (
+        "map-default-new--foo"         => "initial",
+        "map-default-open--foo"        => "active",
+        "map-default-stalled--foo"     => "active",
+        "map-default-rejected--foo"    => "inactive",
+        "map-default-resolved--foo"    => "inactive",
+        "map-default-deleted--foo"     => "inactive",
+
+        "map-foo-initial--default"     => "new",
+        "map-foo-active--default"      => "open",
+        "map-foo-inactive--default"    => "resolved",
+    );
+    my %maps = RT::Lifecycle::ParseMappingsInput( \%args );
+
+    my %expected = (
+      'default -> foo' => {
+          "new"        => "initial",
+          "open"       => "active",
+          "rejected"   => "inactive",
+          "resolved"   => "inactive",
+          "stalled"    => "active",
+          "deleted"    => "inactive",
+      },
+      'foo -> default' => {
+          "initial"    => "new",
+          "active"     => "open",
+          "inactive"   => "resolved",
+      }
+    );
+
+    is_deeply( \%expected, \%maps, "RT::Lifecycle::ParseMappingsInput method successfully parsed input." );
+
+    RT::Test->stop_server;
+    RT->Config->LoadConfigFromDatabase();
+    ( $url, $m ) = RT::Test->started_ok;
+    ok( $m->login( 'root', 'password' ), 'logged in' );
+    $lifecycles = RT->Config->Get('Lifecycles');
+
+    my %updated_maps = (%{$lifecycles->{'__maps__'}}, %maps);
+    $lifecycles->{'__maps__'} = \%updated_maps;
+
+    ($ret, $msg) = $lifecycleObj->_SaveLifecycles(
+        $lifecycles,
+        RT->SystemUser,
+    );
+    ok $ret, "Updated lifecycle successfully";
+
+    RT::Test->stop_server;
+    RT->Config->LoadConfigFromDatabase();
+    ( $url, $m ) = RT::Test->started_ok;
+    ok( $m->login( 'root', 'password' ), 'logged in' );
+    $lifecycles = RT->Config->Get('Lifecycles');
+
+    $m->get_ok( $url . '/Admin/Lifecycles/Mappings.html?Type=ticket&Name=foo' );
+    my $form = $m->form_name('ModifyMappings');
+
+    my $to   = $expected{"default -> sales-engineering"};
+    my $from = $maps{"sales-engineering -> default"};
+
+    my @inputs = $form->inputs;
+    foreach my $input ( @inputs ) {
+        my ($default_from, $default_status, $default_to) = $input->name =~ /^map-(sales-engineering)-(.*)--(default)$/;
+        my ($sales_engineering_from, $sales_engineering_status, $sales_engineering_to) = $input->name =~ /^map-(default)-(.*)--(sales-engineering)$/;
+
+        if ( $default_from ) {
+            is ($input->value, $from->{$default_status}, "Mapping set correctly for default -> sales_engineering for status: $default_status" );
+        }
+        elsif ( $sales_engineering_from ) {
+            is ( $input->value, $to->{$sales_engineering_status}, "Mapping set correctly for sales_engineering -> default for status: $sales_engineering_to" );
         }
     }
 }
