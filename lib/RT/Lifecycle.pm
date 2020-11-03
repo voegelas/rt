@@ -968,7 +968,7 @@ sub ParseMappingsInput {
     my %maps;
     my $lifecycle_re = join '|', map { quotemeta($_) } @lifecycle_names;
     for my $key ( keys %{$args} ) {
-        my ($from_lifecycle, $from_status, $to_lifecycle) = $key =~ /^map-($lifecycle_re)-(.*)--($lifecycle_re)$/ or next;
+        my ($from_lifecycle, $from_status, $to_lifecycle) = $key =~ /^map-($lifecycle_re)--(.*)--($lifecycle_re)$/ or next;
         if ( my $to_status = $args->{$key} ) {
             $maps{"$from_lifecycle -> $to_lifecycle"}{$from_status} = $to_status;
         }
