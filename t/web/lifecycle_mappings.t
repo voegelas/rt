@@ -64,17 +64,17 @@ diag "Test updating mappings";
     my $form = $m->form_name('ModifyMappings');
     $m->submit_form(
         fields => {
-            "map-default-new--foo"      => "initial",
-            "map-default-open--foo"     => "active",
-            "map-default-resolved--foo" => "inactive",
-            "map-foo-initial--default"  => "new",
-            "map-foo-active--default"   => "open",
-            "map-foo-inactive--default" => "resolved",
-            "map-default-deleted--foo"  => "inactive",
-            "map-default-rejected--foo" => "inactive",
-            "map-default-stalled--foo"  => "case-Variant-Status",
-            "Name"                      => "default",
-            "Type"                      => "ticket",
+            "map-default--new--foo"      => "initial",
+            "map-default--open--foo"     => "active",
+            "map-default--resolved--foo" => "inactive",
+            "map-foo--initial--default"  => "new",
+            "map-foo--active--default"   => "open",
+            "map-foo--inactive--default" => "resolved",
+            "map-default--deleted--foo"  => "inactive",
+            "map-default--rejected--foo" => "inactive",
+            "map-default--stalled--foo"  => "case-Variant-Status",
+            "Name"                       => "default",
+            "Type"                       => "ticket",
         },
         button => 'Update'
     );
@@ -119,17 +119,17 @@ diag "Test updating mappings";
     $form = $m->form_name('ModifyMappings');
     $m->submit_form(
         fields => {
-            "map-default-new--foo"      => "active",
-            "map-default-open--foo"     => "active",
-            "map-default-resolved--foo" => "inactive",
-            "map-foo-initial--default"  => "new",
-            "map-foo-active--default"   => "open",
-            "map-foo-inactive--default" => "resolved",
-            "map-default-deleted--foo"  => "inactive",
-            "map-default-rejected--foo" => "inactive",
-            "map-default-stalled--foo"  => "case-variant-status",
-            "Name"                      => "default",
-            "Type"                      => "ticket",
+            "map-default--new--foo"      => "active",
+            "map-default--open--foo"     => "active",
+            "map-default--resolved--foo" => "inactive",
+            "map-foo--initial--default"  => "new",
+            "map-foo--active--default"   => "open",
+            "map-foo--inactive--default" => "resolved",
+            "map-default--deleted--foo"  => "inactive",
+            "map-default--rejected--foo" => "inactive",
+            "map-default--stalled--foo"  => "case-variant-status",
+            "Name"                       => "default",
+            "Type"                       => "ticket",
         },
         button => 'Update'
     );
@@ -167,8 +167,8 @@ diag "Confirm the web UI correctly displays mappings";
 
     my @inputs = $form->inputs;
     foreach my $input ( @inputs ) {
-        my ($default_from, $default_status, $default_to) = $input->name =~ /^map-(default)-(.*)--(foo)$/;
-        my ($foo_from, $foo_status, $foo_to) = $input->name =~ /^map-(default)-(.*)--(foo)$/;
+        my ($default_from, $default_status, $default_to) = $input->name =~ /^map-(default)--(.*)--(foo)$/;
+        my ($foo_from, $foo_status, $foo_to) = $input->name =~ /^map-(default)--(.*)--(foo)$/;
 
         if ( $default_from ) {
             is ($input->value, $from->{$default_status}, "Mapping set correctly for default -> foo for status: $default_status" );
@@ -182,16 +182,16 @@ diag "Confirm the web UI correctly displays mappings";
 diag "Test RT::Lifecycle::ParseMappingsInput method";
 {
     my %args = (
-        "map-default-new--foo"         => "initial",
-        "map-default-open--foo"        => "active",
-        "map-default-stalled--foo"     => "active",
-        "map-default-rejected--foo"    => "inactive",
-        "map-default-resolved--foo"    => "inactive",
-        "map-default-deleted--foo"     => "inactive",
+        "map-default--new--foo"         => "initial",
+        "map-default--open--foo"        => "active",
+        "map-default--stalled--foo"     => "active",
+        "map-default--rejected--foo"    => "inactive",
+        "map-default--resolved--foo"    => "inactive",
+        "map-default--deleted--foo"     => "inactive",
 
-        "map-foo-initial--default"     => "new",
-        "map-foo-active--default"      => "open",
-        "map-foo-inactive--default"    => "resolved",
+        "map-foo--initial--default"     => "new",
+        "map-foo--active--default"      => "open",
+        "map-foo--inactive--default"    => "resolved",
     );
     my %maps = RT::Lifecycle::ParseMappingsInput( \%args );
 
@@ -242,8 +242,8 @@ diag "Test RT::Lifecycle::ParseMappingsInput method";
 
     my @inputs = $form->inputs;
     foreach my $input ( @inputs ) {
-        my ($default_from, $default_status, $default_to) = $input->name =~ /^map-(sales-engineering)-(.*)--(default)$/;
-        my ($sales_engineering_from, $sales_engineering_status, $sales_engineering_to) = $input->name =~ /^map-(default)-(.*)--(sales-engineering)$/;
+        my ($default_from, $default_status, $default_to) = $input->name =~ /^map-(sales-engineering)--(.*)--(default)$/;
+        my ($sales_engineering_from, $sales_engineering_status, $sales_engineering_to) = $input->name =~ /^map-(default)--(.*)--(sales-engineering)$/;
 
         if ( $default_from ) {
             is ($input->value, $from->{$default_status}, "Mapping set correctly for default -> sales_engineering for status: $default_status" );
@@ -257,19 +257,19 @@ diag "Test RT::Lifecycle::ParseMappingsInput method";
 diag "Test RT::Lifecycle::ParseMappingsInput method with lifecycle that has a '-' in the name";
 {
     my %args = (
-        "map-default-new--sales-engineering"         => "sales",
-        "map-default-open--sales-engineering"        => "engineering",
-        "map-default-stalled--sales-engineering"     => "stalled",
-        "map-default-rejected--sales-engineering"    => "rejected",
-        "map-default-resolved--sales-engineering"    => "resolved",
-        "map-default-deleted--sales-engineering"     => "deleted",
+        "map-default--new--sales-engineering"         => "sales",
+        "map-default--open--sales-engineering"        => "engineering",
+        "map-default--stalled--sales-engineering"     => "stalled",
+        "map-default--rejected--sales-engineering"    => "rejected",
+        "map-default--resolved--sales-engineering"    => "resolved",
+        "map-default--deleted--sales-engineering"     => "deleted",
 
-        "map-sales-engineering-sales--default"       => "new",
-        "map-sales-engineering-engineering--default" => "open",
-        "map-sales-engineering-stalled--default"     => "stalled",
-        "map-sales-engineering-rejected--default"    => "rejected",
-        "map-sales-engineering-resolved--default"    => "resolved",
-        "map-sales-engineering-deleted--default"     => "deleted",
+        "map-sales-engineering--sales--default"       => "new",
+        "map-sales-engineering--engineering--default" => "open",
+        "map-sales-engineering--stalled--default"     => "stalled",
+        "map-sales-engineering--rejected--default"    => "rejected",
+        "map-sales-engineering--resolved--default"    => "resolved",
+        "map-sales-engineering--deleted--default"     => "deleted",
     );
     my %maps = RT::Lifecycle::ParseMappingsInput( \%args );
 
@@ -323,8 +323,8 @@ diag "Test RT::Lifecycle::ParseMappingsInput method with lifecycle that has a '-
 
     my @inputs = $form->inputs;
     foreach my $input ( @inputs ) {
-        my ($default_from, $default_status, $default_to) = $input->name =~ /^map-(sales-engineering)-(.*)--(default)$/;
-        my ($sales_engineering_from, $sales_engineering_status, $sales_engineering_to) = $input->name =~ /^map-(default)-(.*)--(sales-engineering)$/;
+        my ($default_from, $default_status, $default_to) = $input->name =~ /^map-(sales-engineering)--(.*)--(default)$/;
+        my ($sales_engineering_from, $sales_engineering_status, $sales_engineering_to) = $input->name =~ /^map-(default)--(.*)--(sales-engineering)$/;
 
         if ( $default_from ) {
             is ($input->value, $from->{$default_status}, "Mapping set correctly for default -> sales_engineering for status: $default_status" );
