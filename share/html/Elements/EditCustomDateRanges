@@ -74,7 +74,7 @@
       <td class="collection-as-table"><& /Elements/SelectCustomDateRangeField, Name => "$id-to", Default => $date_range_spec{to} &></td>
       <td class="collection-as-table"><& /Elements/SelectCustomDateRangeField, Name => "$id-to_fallback", Default => $date_range_spec{to_fallback} &></td>
       <td class="collection-as-table">
-        <select name="<% $id %>-business_time" class="form-control selectpicker">
+        <select data-live-search="true" data-live-search="true"name="<% $id %>-business_time" class="form-control selectpicker">
           <option value="1" <% $date_range_spec{business_time} ? 'selected="selected"' : '' |n%>><&|/l&>Yes</&></option>
           <option value="0" <% $date_range_spec{business_time} ? '': 'selected="selected"' |n%>><&|/l&>No</&></option>
         </select>
@@ -94,7 +94,7 @@
       <td class="collection-as-table"><& /Elements/SelectCustomDateRangeField, Name => 'to' &></td>
       <td class="collection-as-table"><& /Elements/SelectCustomDateRangeField, Name => 'to_fallback' &></td>
       <td class="collection-as-table">
-        <select name="business_time" class="form-control selectpicker">
+        <select data-live-search="true" data-live-search="true"name="business_time" class="form-control selectpicker">
           <option value="1"><&|/l&>Yes</&></option>
           <option value="0" selected="selected"><&|/l&>No</&></option>
         </select>

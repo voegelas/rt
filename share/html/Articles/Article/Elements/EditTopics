@@ -51,7 +51,7 @@
   </div>
   <input type="hidden" name="EditTopics" value="1" />
   <div class="value col-9">
-<select multiple size="10" name="Topics" class="tall selection-box">
+<select data-live-search="true" multiple size="10" name="Topics" class="tall selection-box">
 % if (@Classes) {
 %   unless ($OnlyThisClass) {
 <optgroup label="Current classes (<% join(" ", map {$_->Name} @Classes) %>)">

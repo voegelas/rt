@@ -52,7 +52,7 @@ $Plugin => ''
 <div class="shredder-form form-row">
   <div class="label col-auto"><&|/l&>Select plugin</&>: </div>
   <div class="col-auto">
-    <select name="Plugin" class="form-control selectpicker" onchange="showShredderPluginTab(this.value);">
+    <select data-live-search="true" name="Plugin" class="form-control selectpicker" onchange="showShredderPluginTab(this.value);">
       <option value=""><% loc('(no value)') %></option>
 % foreach my $p( keys %plugins ) {
       <option value="<% $p %>" <% ($p eq $Plugin)? 'selected="selected"': '' %>><% loc($p) %></option>

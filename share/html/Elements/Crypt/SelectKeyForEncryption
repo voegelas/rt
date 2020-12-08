@@ -48,7 +48,7 @@
 % if (!@keys) {
 <% loc("No usable keys.") %>
 % } else {
-<select name="<% $Name %>">
+<select data-live-search="true" name="<% $Name %>">
 %     foreach my $key (@keys) {
 <option value="<% $key->{'Fingerprint'} %>"><% $key->{'Formatted'} %> <% loc("(trust: [_1])", $key->{'TrustTerse'}) %></option>
 %     }

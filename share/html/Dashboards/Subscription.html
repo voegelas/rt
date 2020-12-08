@@ -118,7 +118,7 @@
           </span>
         </div>
         <div class="col-auto">
-          <select name="Dow" class="form-control selectpicker">
+          <select data-live-search="true" name="Dow" class="form-control selectpicker">
               <option value="Monday" <% $fields{'Dow'} eq 'Monday' ? 'selected="selected"' : '' |n %>><&|/l&>Monday</&></option>
               <option value="Tuesday" <% $fields{'Dow'} eq 'Tuesday' ? 'selected="selected"' : '' |n %>><&|/l&>Tuesday</&></option>
               <option value="Wednesday" <% $fields{'Dow'} eq 'Wednesday' ? 'selected="selected"' : '' |n %>><&|/l&>Wednesday</&></option>
@@ -132,7 +132,7 @@
           <span class="current-value form-control"><&|/l&>every</&></span>
         </div>
         <div class="col-auto">
-          <select name="Fow" class="form-control selectpicker">
+          <select data-live-search="true" name="Fow" class="form-control selectpicker">
 % for my $f ( qw/1 2 3 4/ ) {
             <option value="<%$f%>" <% $fields{'Fow'} == $f ? 'selected="selected"' : '' |n %>><% $f %></option>
 % }
@@ -152,7 +152,7 @@
           </span>
         </div>
         <div class="col-auto">
-          <select name="Dom" class="form-control selectpicker">
+          <select data-live-search="true" name="Dom" class="form-control selectpicker">
 % for my $dom (1..31) {
             <option value="<% $dom %>" <% $fields{'Dom'} == $dom ? 'selected="selected"' : '' |n %>><% loc($dom) %></option>
 % }
@@ -179,7 +179,7 @@
     <div class="value col-9">
       <div class="row">
         <div class="col-auto">
-          <select name="Hour" class="form-control selectpicker">
+          <select data-live-search="true" name="Hour" class="form-control selectpicker">
 % my $formatter = RT::Date->new($session{CurrentUser})->LocaleObj;
 % my $dt = DateTime->now;
 % $dt->set_minute(0);
@@ -229,7 +229,7 @@
     <div class="value col-9">
       <div class="row">
         <div class="col-auto">
-          <select name="Rows" class="form-control selectpicker">
+          <select data-live-search="true" name="Rows" class="form-control selectpicker">
 % for my $rows (1, 2, 5, 10, 15, 20, 25, 50, 75, 100, 0) {
             <option value="<% $rows %>" <% $fields{'Rows'} eq $rows ? 'selected="selected"' : '' |n %>><% loc($rows || 'Unlimited') %></option>
 % }

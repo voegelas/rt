@@ -45,7 +45,7 @@
 %# those contributions and any derivatives thereof.
 %#
 %# END BPS TAGGED BLOCK }}}
-<select name="<%$Name%>" class="form-control selectpicker">
+<select data-live-search="true" data-live-search="true"name="<%$Name%>" class="form-control selectpicker">
 <option value="<%$TrueVal%>" <%$TrueDefault|n%>><%$True%></option>
 <option value="<%$FalseVal%>" <%$FalseDefault|n%>><%$False%></option>
 </select>

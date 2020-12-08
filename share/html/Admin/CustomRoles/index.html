@@ -58,7 +58,7 @@
 
 <div class="form-row">
   <div class="col-auto">
-    <select class="form-control selectpicker" name="SearchField">
+    <select data-live-search="true" class="form-control selectpicker" name="SearchField">
 % foreach my $col (qw(Name Description EntryHint)) {
       <option <% $SearchField eq $col ? 'selected="selected"' : '' |n %> value="<% $col %>"><% loc($col) %></option>
 % }

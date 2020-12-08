@@ -81,7 +81,7 @@
 % }
 
 <div class="form-row"><div class="label col-3"><&|/l&>Update Type</&>:</div>
-<div class="value col-9"><select class="form-control selectpicker" name="UpdateType" id="UpdateType">
+<div class="value col-9"><select data-live-search="true" class="form-control selectpicker" name="UpdateType" id="UpdateType">
 % if ($CanComment) {
 <option value="private" <% ($ARGS{'UpdateType'} &&  $ARGS{'UpdateType'} eq "private") ? qq[ selected="selected"] : !$ARGS{'UpdateType'}&&$CommentDefault |n %>><&|/l&>Comments (Not sent to requestors)</&></option>
 % }

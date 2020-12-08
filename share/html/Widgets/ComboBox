@@ -51,7 +51,7 @@ my $z_index = 9999;
 </%once>
 
 <div class="combobox-wrapper" data-name="<% $Name %>" data-value="<% $Default // '' %>">
-  <select class="form-control combobox" size="<% $Rows %>">
+  <select data-live-search="true" class="form-control combobox" size="<% $Rows %>">
     <option value=""></option>
 % for my $value (@Values) {
     <option value="<% $value %>" <% ($Default // '') eq $value ? 'selected="selected"' : '' %>><% $value%></option>

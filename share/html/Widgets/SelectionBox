@@ -178,7 +178,7 @@ $self => undef
   <div class="col-5">
     <div class="form-row">
       <div class="col-12">
-        <select name="<%$name%>-Available" id="<%$name%>-Available" size="<%$size%>" multiple="multiple" class="tall selection-box form-control">
+        <select data-live-search="true" name="<%$name%>-Available" id="<%$name%>-Available" size="<%$size%>" multiple="multiple" class="tall selection-box form-control">
 % for (@{$self->{Available}}) {
           <option value="<% $_->[0] %>"><% $_->[1] %></option>
 % }
@@ -200,7 +200,7 @@ $self => undef
   <div class="col-5">
     <div class="form-row">
       <div class="col-12">
-        <select name="<%$name%>-Selected" id="<%$name%>-Selected" size="<%$size%>" multiple="multiple" class="tall selection-box form-control">
+        <select data-live-search="true" name="<%$name%>-Selected" id="<%$name%>-Selected" size="<%$size%>" multiple="multiple" class="tall selection-box form-control">
 % for (@{$self->{Current}}) {
           <option value="<% $_ %>"
 % if (exists $selected{$_}) {

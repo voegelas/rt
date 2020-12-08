@@ -49,7 +49,7 @@
 <&|/Widgets/TitleBox, title => join(': ', grep defined, loc("Current search"), $Description) &>
 
 <div class="form-group">
-  <select size="10" name="clauses" class="tall form-control" style="width: 100%" multiple="multiple">
+  <select data-live-search="true" size="10" name="clauses" class="tall form-control" style="width: 100%" multiple="multiple">
 % $m->out($optionlist);
   </select>
 </div>

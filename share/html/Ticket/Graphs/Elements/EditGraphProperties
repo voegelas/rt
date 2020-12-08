@@ -52,7 +52,7 @@
       <% loc('Direction') %>
     </div>
     <div class="value col-9">
-      <select class="form-control selectpicker" name="Direction">
+      <select data-live-search="true" class="form-control selectpicker" name="Direction">
         <option value="TB" <% ($Direction||'TB') eq 'TB'? 'selected="selected"': '' |n %>><% loc('top to bottom') %></option>
         <option value="LR" <% ($Direction||'TB') eq 'LR'? 'selected="selected"': '' |n %>><% loc('left to right') %></option>
 %# XXX: not supported by GraphViz perl module
@@ -66,7 +66,7 @@
       <% loc('Main type of links') %>
     </div>
     <div class="value col-9">
-      <select class="form-control selectpicker" name="LeadingLink">
+      <select data-live-search="true" class="form-control selectpicker" name="LeadingLink">
 % foreach ( @link_types ) {
        <option value="<% $_ %>" <% ($LeadingLink||'Members') eq $_? 'selected="selected"': '' |n %>><% loc($_) %></option>
 % }
@@ -79,7 +79,7 @@
       <% loc('maximum depth') %>
     </div>
     <div class="value col-9">
-      <select class="form-control selectpicker" name="MaxDepth">
+      <select data-live-search="true" class="form-control selectpicker" name="MaxDepth">
         <option value="0"><% loc('Unlimit') %></option>
 % foreach ( 1..6 ) {
         <option value="<% $_ %>" <% ($MaxDepth||0) == $_? 'selected="selected"': '' %>><% $_ %></option>
@@ -115,7 +115,7 @@
       <% loc('Fill boxes with color using') %>:
     </div>
     <div class="value col-9">
-      <select name="FillUsing" class="form-control selectpicker">
+      <select data-live-search="true" name="FillUsing" class="form-control selectpicker">
         <option value=""><% loc('nothing') %></option>
 <%PERL>
 my @tmp = @properties;

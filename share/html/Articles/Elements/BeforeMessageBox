@@ -62,7 +62,7 @@
       <&|/l, $QueueObj->Name &>Choose from Topics for [_1]</&>:
     </div>
     <div class="value col-9">
-      <select name="<% $name_prefix %>Articles-Include-Topic" onchange="this.form.submit()" class="form-control selectpicker">
+      <select data-live-search="true" name="<% $name_prefix %>Articles-Include-Topic" onchange="this.form.submit()" class="form-control selectpicker">
         <option value="" selected>-</option>
 % for ( @$topics ) { 
         <option value="<% $_->{id} %>"><%'&nbsp;' x $_->{depth} . ($_->{name}|| loc('(no name)')) |n%>
@@ -81,7 +81,7 @@
       <&|/l, $included_topic->Name &>Select an Article from [_1]</&>:
     </div>
     <div>
-      <select name="IncludeArticleId" onchange="this.form.submit()" class="form-control selectpicker">
+      <select data-live-search="true" name="IncludeArticleId" onchange="this.form.submit()" class="form-control selectpicker">
       <option value="" selected>-</option>
 % while ( my $art = $topic_articles->Next ) {
       <option value="<% $art->id %>"><%$art->Name||loc('(no name)')%>: <%$art->Summary%></option>

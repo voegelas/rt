@@ -87,7 +87,7 @@
 % $m->callback( %ARGS, CallbackName => 'AfterWorked', Ticket => $t );
 <input type="hidden" class="hidden" name="id" value="<%$t->Id%>" /><br />
 <div class="entry"><span class="label"><&|/l&>Update Type</&>:</span>
-<div class="value"><select name="UpdateType">
+<div class="value"><select data-live-search="true" name="UpdateType">
 % if ($CanComment) {
 <option value="private" <% ($ARGS{'UpdateType'} &&  $ARGS{'UpdateType'} eq "private") ? qq[ selected="selected"] : !$ARGS{'UpdateType'}&&$CommentDefault |n %>><&|/l&>Comments (Not sent to requestors)</&></option>
 % }

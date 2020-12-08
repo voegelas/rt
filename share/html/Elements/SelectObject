@@ -64,7 +64,7 @@
 </ul>
 % }
 % else {
-<select name="<%$Name%>" <% ($Multiple) ? qq{class="tall" multiple="multiple" size="$Size"} : '' |n%> <% ($OnChange) ?  'onchange="'.$OnChange.'"' : '' |n %> class="<%$Class%> selectpicker form-control" <% ($AccessKey) ? qq{accesskey="$AccessKey"} : '' |n%>>
+<select data-live-search="true" data-live-search="true"name="<%$Name%>" <% ($Multiple) ? qq{class="tall" multiple="multiple" size="$Size"} : '' |n%> <% ($OnChange) ?  'onchange="'.$OnChange.'"' : '' |n %> class="<%$Class%> selectpicker form-control" <% ($AccessKey) ? qq{accesskey="$AccessKey"} : '' |n%>>
 %     if ($ShowNullOption) {
   <option value=""><% $DefaultLabel %></option>
 %     }

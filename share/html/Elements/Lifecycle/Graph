@@ -63,7 +63,7 @@
         <label for="type"><&|/l&>Type</&>:</label>
       </div>
       <div class="col-9 value">
-        <select class="selectpicker form-control" id="type" name="type">
+        <select data-live-search="true" class="selectpicker form-control" id="type" name="type">
           <option value="initial"><&|/l&>Initial</&></option>
           <option value="active"><&|/l&>Active</&></option>
           <option value="inactive"><&|/l&>Inactive</&></option>

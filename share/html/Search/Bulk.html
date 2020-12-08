@@ -294,7 +294,7 @@
       <&|/l&>Update Type</&>:
     </div>
     <div class="value col-9">
-      <select class="form-control selectpicker" name="UpdateType" id="UpdateType">
+      <select data-live-search="true" class="form-control selectpicker" name="UpdateType" id="UpdateType">
           <option value="private" <% $ARGS{UpdateType} && $ARGS{UpdateType} eq 'private' ? 'selected="selected"' : '' %> ><&|/l&>Comments (Not sent to requestors)</&></option>
         <option value="response" <% $ARGS{UpdateType} && $ARGS{UpdateType} eq 'response' ? 'selected="selected"' : '' %>><&|/l&>Reply to requestors</&></option>
       </select> 

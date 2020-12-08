@@ -50,7 +50,7 @@
   <input name="q" accesskey="0" class="field form-control" placeholder="<&|/l&>Search Articles</&>..." type="search" results="5" autosave="search-articles" />
 % if ($class or $topic) {
 <input type="hidden" name="ExpandTopics" value="1" />
-<select name="Topics">
+<select data-live-search="true" name="Topics">
 % if ($topic) {
 <option value="<% $topic %>">in this topic</option>
 % }

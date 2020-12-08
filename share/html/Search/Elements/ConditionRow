@@ -89,7 +89,7 @@ $handle_block = sub {
     }
     if ( $box->{'Type'} eq 'select' ) {
         my $res = '';
-        $res .= qq{<select id="$name" name="$name" class="form-control selectpicker">};
+        $res .= qq{<select data-live-search="true" id="$name" name="$name" class="form-control selectpicker">};
         my @options = @{ $box->{'Options'} };
         while( defined( my $k = shift @options ) ) {
             my $v = shift @options;

@@ -82,7 +82,7 @@
 % if (@category) {
 %# this hidden select is to supply a full list of values,
 %# see filter_cascade_select() in js/cascaded.js
-      <select name="<%$name%>-Complete" id="<%$name%>-Complete" class="hidden" disabled="disabled">
+      <select data-live-search="true" data-live-search="true"name="<%$name%>-Complete" id="<%$name%>-Complete" class="hidden" disabled="disabled">
 % if ( $show_empty_option ) {
         <option value=""<% !$selected && qq[ selected="selected"] |n %>><&|/l&>(no value)</&></option>
 % }
@@ -95,9 +95,6 @@
   name="<%$name%>" id="<%$name%>"
 
     class="CF-Edit CF-<%$CustomField->id%>-Edit form-control <% $RenderType eq 'Dropdown' ? 'selectpicker' : '' %>"
-%   if ( $use_chosen ) {
-    data-live-search="true"
-%   }
 
 % if ($CustomField->BasedOnObj->id) {
   data-cascade-based-on-name="<% $BasedOnName || $NamePrefix . $CustomField->BasedOnObj->id . '-Value' |n %>"
@@ -153,11 +150,8 @@ else {
     }
 }
 
-my $use_chosen = CachedCustomFieldValues($CustomField)->Count >= 10 ? 1 : 0;
-$m->callback( CallbackName => 'Chosen', UseChosen => \$use_chosen, CustomField => $CustomField );
-
 # it's weird to see "(no value) X" in the input when selecting multiple values
-$show_empty_option = 0 if $use_chosen && $Multiple;
+$show_empty_option = 0 if $Multiple;
 </%init>
 <%ARGS>
 $Object => undef
