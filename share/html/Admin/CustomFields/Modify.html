@@ -246,6 +246,7 @@ jQuery( function() {
   <div class="col-8">
     <input class="form-control" type="text" size="60" name="LinkValueTo"  value="<% $CustomFieldObj->LinkValueTo || $LinkValueTo || '' %>" />
   </div>
+  <div class="col-2"></div>
 </div>
 
 <div class="form-row">
@@ -255,6 +256,7 @@ jQuery( function() {
     <&|/l&>Fill in this field with a URL.</&>
     <&|/l_unsafe, '<tt>__id__</tt>', '<tt>__CustomField__</tt>' &>RT will replace [_1] and [_2] with the record's id and the custom field's value, respectively.</&>
   </div>
+  <div class="col-2"></div>
 </div>
 
 <div class="form-row">
@@ -264,6 +266,7 @@ jQuery( function() {
   <div class="value col-8">
     <input class="form-control" type="text" size="60" name="IncludeContentForValue" value="<% $CustomFieldObj->IncludeContentForValue || $IncludeContentForValue || '' %>" />
   </div>
+  <div class="col-2"></div>
 </div>
 
 <div class="form-row">
@@ -274,6 +277,7 @@ jQuery( function() {
     <&|/l_unsafe, '<tt>__id__</tt>', '<tt>__CustomField__</tt>' &>RT will replace [_1] and [_2] with the record's id and the custom field's value, respectively.</&>
     <i><&|/l&>Some browsers may only load content from the same domain as your RT server.</&></i>
   </div>
+  <div class="col-2"></div>
 </div>
 </&>
 
