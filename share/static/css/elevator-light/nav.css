@@ -209,10 +209,10 @@ ul.sf-menu li {
     position: absolute;
     background: transparent;
     top: 0;
-    right: 18em;
+    right: 17.75em;
     width: auto;
     font-size: 0.9em;
-    z-index: 99;
+    z-index: 1000;
 }
 
 #topactions input[type="search"] {
