@@ -48,9 +48,9 @@
 <form name="EditAboutMe" action="" method="post" enctype="multipart/form-data">
 <input type="hidden" class="hidden" name="id" value="<%$UserObj->Id%>" />
 
-<div class="form-row">
+<div class="row">
 %### Left column ###
-  <div class="col-6">
+  <div class="boxcontainer col-xl-6">
 
     <&| /Widgets/TitleBox, title => loc('Identity'), id => "user-prefs-identity" &>
       <input type="hidden" class="hidden" name="Name" value="<%$UserObj->Name%>" />
@@ -153,8 +153,7 @@
   </div>
 
 %### Right column ###
-  <div class="col-6
-  ">
+  <div class="boxcontainer col-xl-6">
 
     <&| /Widgets/TitleBox, title => loc( $AccessControlName ), id => "user-prefs-access-control" &>
 % if ( $UserObj->__Value('Password') ne '*NO-PASSWORD*' ) {
@@ -249,7 +248,7 @@
 
 %if ($UserObj->Privileged) {
 <div class="form-row">
-  <div class="col-6">
+  <div class="col-12">
     <&| /Widgets/TitleBox, title => loc('Signature'), id => "user-prefs-signature" &>
       <textarea class="form-control signature" cols="80" rows="5" name="Signature" wrap="hard">
       <%$UserObj->Signature || ''%></textarea>
