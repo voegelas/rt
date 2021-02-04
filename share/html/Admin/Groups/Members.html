@@ -87,12 +87,12 @@ my @users = map {$_->[1]}
 </ul>
 <&|/l&>Groups</&>
 <ul>
-% my $GroupMembers = $Group->MembersObj;
-% $GroupMembers->LimitToGroups();
-% while ( my $member = $GroupMembers->Next ) {
-% $GroupsSeen{ $member->MemberId } = 1 if $SkipSeenGroups;
-<li><input type="checkbox" class="checkbox" name="DeleteMember-<% $member->MemberId %>" value="1" />
-<a href="<% RT->Config->Get('WebPath') %>/Admin/Groups/Modify.html?id=<% $member->MemberObj->Object->id %>"><% $member->MemberObj->Object->Name %></a>
+% my $Groups = $Group->GroupMembersObj( Recursively => 0 );
+% my @groups = sort { lc( $a->Name ) cmp lc( $b->Name ) } @{ $Groups->ItemsArrayRef };
+% for my $group ( @groups ) {
+% $GroupsSeen{ $group->id } = 1 if $SkipSeenGroups;
+<li><input type="checkbox" class="checkbox" name="DeleteMember-<% $group->id %>" value="1" />
+<a href="<% RT->Config->Get('WebPath') %>/Admin/Groups/Modify.html?id=<% $group->id %>"><% $group->Name %></a>
 % }
 </ul>
 % }
