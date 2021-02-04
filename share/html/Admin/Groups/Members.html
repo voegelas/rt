@@ -51,6 +51,8 @@
 
 <form action="<% RT->Config->Get('WebPath') %>/Admin/Groups/Members.html" method="post">
 <input type="hidden" class="hidden" name="id" value="<%$Group->Id%>" />
+<input type="hidden" class="hidden" name="Rows" value="<% $Rows %>" />
+<input type="hidden" class="hidden" name="Page" value="<% $Page %>" />
 
 <&| /Widgets/TitleBox, title => loc('Editing membership for group [_1]', $Group->Label) &>
 
@@ -72,6 +74,8 @@
 % } else {
 <&|/l&>Users</&>
 % my $Users = $Group->UserMembersObj( Recursively => 0 );
+% $Users->RowsPerPage($Rows);
+% $Users->GotoPage($Page - 1);
 <%perl>
 my @users = map {$_->[1]}
             sort { lc($a->[0]) cmp lc($b->[0]) }
@@ -88,6 +92,8 @@ my @users = map {$_->[1]}
 <&|/l&>Groups</&>
 <ul>
 % my $Groups = $Group->GroupMembersObj( Recursively => 0 );
+% $Groups->RowsPerPage($Rows);
+% $Groups->GotoPage($Page - 1);
 % my @groups = sort { lc( $a->Name ) cmp lc( $b->Name ) } @{ $Groups->ItemsArrayRef };
 % for my $group ( @groups ) {
 % $GroupsSeen{ $group->id } = 1 if $SkipSeenGroups;
@@ -103,6 +109,18 @@ my @users = map {$_->[1]}
 </td>
 </tr>
 </table>
+
+% if ( $Pages ) {
+    <& /Elements/CollectionListPaging,
+        BaseURL     => '?',
+        Rows        => $Rows,
+        TotalFound  => $TotalFound,
+        CurrentPage => $Page,
+        Pages       => $Pages,
+        URLParams   => { map { $_ => $ARGS{$_} } qw/id Rows Page/ },
+    &>
+% }
+
 </&>
 <em><&|/l&>(Check box to delete)</&></em>
 <& /Elements/Submit, Label => loc('Modify Members'), Reset => 1 &>
@@ -184,6 +202,23 @@ foreach my $member (grep $_, @AddMembersGroups) {
     my ($val, $msg) = $Group->AddMember($principal->PrincipalId);
     push (@results, $msg);
 }
+
+$Rows ||= 50;
+$Page ||= 1;
+my $TotalFound = $Group->UserMembersObj( Recursively => 0 )->Count;
+if ( my $group_count = $Group->GroupMembersObj( Recursively => 0 )->Count ) {
+    $TotalFound = $group_count if $TotalFound < $group_count;
+}
+
+my $Pages;
+if ( $TotalFound && $TotalFound > $Rows ) {
+    $Pages = int( $TotalFound / $Rows ) + ( $TotalFound % $Rows ? 1 : 0 );
+    # This could happen if admin deletes records on the last page.
+    $Page = $Pages if $Page > $Pages;
+}
+else {
+    $Page = 1;
+}
 </%INIT>
 
 <%ARGS>
@@ -192,4 +227,6 @@ foreach my $member (grep $_, @AddMembersGroups) {
 $id => undef
 $SkipSeenUsers => 1
 $SkipSeenGroups => 1
+$Rows => RT->Config->Get('AdminSearchResultRows')->{Users}
+$Page => 1
 </%ARGS>
