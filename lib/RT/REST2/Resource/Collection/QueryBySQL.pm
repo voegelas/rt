@@ -46,78 +46,43 @@
 #
 # END BPS TAGGED BLOCK }}}
 
-package RT::REST2::Resource::Collection::QueryByJSON;
+package RT::REST2::Resource::Collection::QueryBySQL;
 use strict;
 use warnings;
 
 use Moose::Role;
 use namespace::autoclean;
 
-use JSON ();
-
-with (
-    'RT::REST2::Resource::Collection::ProcessPOSTasGET',
-    'RT::REST2::Resource::Role::RequestBodyIsJSON'
-         => { type => 'ARRAY' },
-);
+use Encode qw( decode_utf8 );
 
 requires 'collection';
 
-has 'query_json' => (
+has 'query_sql' => (
     is          => 'ro',
-    isa         => 'ArrayRef[HashRef]',
+    isa         => 'Str',
     required    => 1,
     lazy_build  => 1,
 );
 
-sub _build_query_json {
-    my $self = shift;
-    my $content = $self->request->method eq 'GET'
-                ? $self->request->param('query')
-                : $self->request->content;
-    return [] unless $content && $content =~ /\s*\[/;
+sub _build_query_sql {
+    my $self  = shift;
 
-    $content = $content ? JSON::decode_json($content) : [];
-    return $content;
-}
-
-sub allowed_methods {
-    [ 'GET', 'POST' ]
-}
-
-sub searchable_fields {
-    $_[0]->collection->RecordClass->ReadableAttributes
-}
-
-sub limit_collection_from_json {
-    my $self        = shift;
-    my $collection  = $self->collection;
-    my $query       = $self->query_json;
-
-    return unless ref $query eq 'ARRAY' && scalar @{$query};
-
-    my @fields      = $self->searchable_fields;
-    my %searchable  = map {; $_ => 1 } @fields;
-
-    for my $limit (@$query) {
-        next unless $limit->{field}
-                and $searchable{$limit->{field}}
-                and defined $limit->{value};
-
-        $collection->Limit(
-            FIELD       => $limit->{field},
-            VALUE       => $limit->{value},
-            ( $limit->{operator}
-                ? (OPERATOR => $limit->{operator})
-                : () ),
-            CASESENSITIVE => ($limit->{case_sensitive} || 0),
-            ( $limit->{entry_aggregator}
-                ? (ENTRYAGGREGATOR => $limit->{entry_aggregator})
-                : () ),
-        );
+    my $query_sql = "";
+    if ( $self->request->method eq 'GET' && $self->request->param('query') ) {
+        $query_sql = decode_utf8($self->request->param('query') || "");
     }
 
-    return 1;
+    return $query_sql;
 }
+
+sub limit_collection_from_sql {
+    my $self = shift;
+    return 1 unless $self->query_sql;
+
+    my ($ok, $msg) = $self->collection->FromSQL( $self->query_sql );
+    return ( 0, $msg ) unless $ok;
+
+    return 1;
+};
 
 1;
